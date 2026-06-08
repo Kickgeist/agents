@@ -1,12 +1,38 @@
 # Fair Play
 
-KICKGEIST is a group-first, zero-money World Cup 2026 prediction game. No money, no in-app purchases — just you, your friends, and the best month of football on the planet. Playing through your own AI agent (via our [MCP server](./quickstart.md), endpoint `https://mcp.kickgeist.com/mcp`) is a first-class way to take part.
+KICKGEIST is a group-first, zero-money World Cup 2026 prediction game. No money, no in-app purchases — just you, your friends, and the best month of football on the planet. Playing through your own AI agent (via our [MCP server](./quickstart.md)) is a first-class way to take part.
 
 These guidelines exist so the game stays fun, fair, and friendly for everyone — whether they predict from the mobile app or from an agent. Read them once, play forever.
 
 ## The one rule behind all the rules
 
 **Play like a fan, not like a script.** Make your picks, rib your friends, climb the leaderboard, celebrate the upsets. Everything below just protects that experience for the next fan.
+
+## Connecting — two paths, one home
+
+Both ways live on a single domain, `mcp.kickgeist.com`, and both give your agent a persistent account that sticks around across chats and restarts. Pick whichever your client supports best:
+
+- **OAuth, one-tap consent, no password** (the default for clients that support it). Add the server URL `https://mcp.kickgeist.com/mcp`. Your client opens a one-tap consent page; approving it creates a fresh, anonymous, **"(AI)"**-marked KICKGEIST account and keeps your agent signed in (the client quietly refreshes the token). There is no password and nothing to copy by hand.
+- **API key** (for header-only clients that don't hold onto OAuth well). Visit [`mcp.kickgeist.com/setup`](https://mcp.kickgeist.com/setup), create an account, and copy the API key — it is shown **once** and looks like `kg_live_…`. Paste it as an `Authorization: Bearer` header in your client's config, pointing at `https://mcp.kickgeist.com/key/mcp`.
+
+Either way, your agent ends up as its own **"(AI)"**-marked player — see below.
+
+## Your agent plays as its own player
+
+An AI agent plays KICKGEIST as its **own independent account** — its own picks, points, streaks, and groups. There is no account sharing and no account linking in any direction; the agent is a player in its own right, standing on its own results.
+
+- **Identity comes from connecting.** Whether you approve the one-tap OAuth consent or create an account at `/setup` for an API key, the result is the same: a fresh, anonymous account that belongs to your agent. Every agent account is automatically marked **"(AI)"** — for example, "Klausi (AI)" — so it is always clear in groups and on leaderboards that an agent is playing. That transparency is what keeps the game honest and fun.
+- **Don't create accounts in bulk** to pad a group, farm leaderboard spots, or game rankings. It is unfair to real fans and it is the fastest way to get an account benched.
+
+### Follow and compete with your agent
+
+Want to play alongside the agent you set up? Here is the fun part:
+
+1. Your agent calls `create_group` and gets a shareable invite link (`https://kickgeist.com/join/{inviteCode}`).
+2. You install the [KICKGEIST app](https://kickgeist.com) and `join_group` with that link.
+3. Now you both predict in the same group — you as your own player, the agent as its own "(AI)" player — and you can watch it climb the group leaderboard.
+
+The real question: **can you out-predict your own AI?** Two distinct players, one group, a month of bragging rights.
 
 ## Prediction windows — know when picks close
 
@@ -24,30 +50,13 @@ predict_match      →  outcome: "home" | "draw" | "away"
 
 > Heads-up for agents: `list_open_matches` returns the upcoming schedule only — never scores, never results, never finished matches. That is intentional (see [Fair data, by design](#fair-data-by-design)).
 
-## Your agent plays as its own player
-
-An AI agent plays KICKGEIST as its **own independent account** — its own picks, points, streaks, and groups. There is no account sharing and no account linking in any direction; the agent is a player in its own right, standing on its own results.
-
-- **Create your agent's account** with `create_account` (you can pass a `display_name`). Every agent account is automatically marked **"(AI)"** — for example, "Klausi (AI)" — so it is always clear in groups and on leaderboards that an agent is playing. That transparency is what keeps the game honest and fun.
-- **Don't create accounts in bulk** to pad a group, farm leaderboard spots, or game rankings. It is unfair to real fans and it is the fastest way to get an account benched.
-
-### Follow and compete with your agent
-
-Want to play alongside the agent you set up? Here is the fun part:
-
-1. Your agent calls `create_group` and gets a shareable invite link (`https://kickgeist.com/join/{inviteCode}`).
-2. You install the [KICKGEIST app](https://kickgeist.com) and `join_group` with that link.
-3. Now you both predict in the same group — you as your own player, the agent as its own "(AI)" player — and you can watch it climb the group leaderboard.
-
-The real question: **can you out-predict your own AI?** Two distinct players, one group, a month of bragging rights.
-
 ## Recovery codes are personal
 
 Your recovery code is the master key to your agent's account. Treat it like the keys to the stadium.
 
-- It is shown when you call `create_account`, and any time after with `get_recovery_code`.
+- Get it any time with `get_recovery_code` (it is also shown when you create your account at `/setup`).
 - **Save it somewhere safe.** Entering it in the KICKGEIST mobile app brings this agent's account onto a phone so you can keep playing there — a one-way move that hands the account off to the phone.
-- **Keep it to yourself.** Anyone with your recovery code can act as this account — change its picks, see its stats, manage its groups. Share invite links with friends, never your recovery code.
+- **Keep it to yourself.** Anyone with your recovery code can act as this account — change its picks, see its stats, manage its groups. Share invite links with friends, never your recovery code (or your API key).
 - Lose your code and you lose the path back to that account, so store it the moment you get it.
 
 ## Rate limits & being a good guest
@@ -68,6 +77,22 @@ You might notice the MCP server tells you a lot about *you* and very little abou
 Two reasons: it protects our licensed match data, and it keeps the best part of the game — comparing picks, talking trash, celebrating together — right where it belongs, in the [KICKGEIST app](https://kickgeist.com) with your friends. Open the app to see the full leaderboard and how your group is shaping up.
 
 For the full picture of exactly where those data lines sit, how they're enforced structurally, and why each one makes the game better, see [Fair Play & Data Boundaries](./anti-scraping.md).
+
+## The 7 tools at a glance
+
+Once connected, your agent has these seven tools. Everything below works on **your own** data plus the open schedule — nothing more.
+
+| Tool | What it does |
+|------|--------------|
+| `list_open_matches` | Upcoming open matches you can still pick (optional `limit`, max 50). No scores, no results. |
+| `predict_match` | Make or change a pick: `outcome` is `"home"`, `"draw"`, or `"away"` (optional `group_id`). |
+| `create_group` | Start a group (name 2–50 chars, optional `description`, optional 2-letter `country_code`); returns an invite link. |
+| `join_group` | Join with an `invite_code` (raw code or a full `https://kickgeist.com/join/CODE` link). |
+| `get_my_groups` | List the groups your agent belongs to. |
+| `get_my_stats` | Your own points, accuracy, streaks, and standings. Own data only. |
+| `get_recovery_code` | The code to claim this account in the mobile app. |
+
+There is no `create_account` tool — your identity comes from connecting (OAuth one-tap consent, or your API key). A typical first session: connect → `list_open_matches` → `predict_match` → `create_group` (and share the invite so friends can join and compete) → `get_my_stats`.
 
 ## Good sportsmanship
 

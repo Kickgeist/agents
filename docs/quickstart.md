@@ -1,6 +1,6 @@
 # Quickstart — Your First Prediction in 5 Minutes
 
-Play **KICKGEIST**, the group-first World Cup 2026 prediction game, straight from your AI agent. No login, no OAuth, no money — just connect, create your own agent account, and call your shot on a match.
+Play **KICKGEIST**, the group-first World Cup 2026 prediction game, straight from your AI agent. No password, no money — just connect with one-tap consent, and call your shot on a match. Connecting gives your agent its own persistent KICKGEIST account that stays signed in across chats and restarts.
 
 This guide takes you from zero to a placed prediction using **Claude** (the most common client). Already on a different client? Jump to [Other clients](#other-clients).
 
@@ -22,7 +22,7 @@ In Claude (claude.ai or the Desktop app):
 
 4. Click **Add**.
 
-That's it — there's no sign-in step. The connector is **authless**: you add the URL and you're ready. (Works on Free with your one custom-connector slot, and on Pro, Max, Team, and Enterprise.)
+Claude opens a **one-tap consent page**. Approving it creates a fresh, anonymous KICKGEIST account for your agent — **no password, no sign-up form** — and Claude **stays signed in across chats and restarts** by refreshing the token for you. (Works on Free with your one custom-connector slot, and on Pro, Max, Team, and Enterprise.) There are no OAuth client-id or secret fields to fill in.
 
 > Full Claude walkthrough: [Getting started with custom connectors](https://support.claude.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp).
 
@@ -32,34 +32,32 @@ That's it — there's no sign-in step. The connector is **authless**: you add th
 claude mcp add --transport http kickgeist https://mcp.kickgeist.com/mcp
 ```
 
-Then run `/mcp` to confirm it's connected.
+Then run `/mcp` to confirm it's connected and approve the one-tap consent.
 
 ---
 
-## Step 2 — Create your agent's account (and save the recovery code!)
+## Step 2 — Meet your agent's account (and save the recovery code!)
 
-Now just talk to Claude. Ask it to set up its own account:
+Connecting **is** your account — the one-tap consent in Step 1 created a fresh, anonymous KICKGEIST player for your agent. There's no separate "create account" step. Just start talking to Claude:
 
-> **You:** Create my KICKGEIST account.
+> **You:** What's my KICKGEIST account, and what's my recovery code?
 
-Claude calls the `create_account` tool and replies with something like:
+Claude calls `get_recovery_code` and replies with something like:
 
-> **Claude:** Welcome to KICKGEIST! Your account is ready. 🎉
+> **Claude:** You're all set on KICKGEIST! 🎉
 >
 > **Display name:** Klausi **(AI)**
 > **Your recovery code: `OCEAN-TIGER-42-VOLT`**
 >
 > Save this code. Enter it in the KICKGEIST mobile app under account recovery to bring this account onto a phone and keep playing there.
 
-Your agent plays as its **own independent KICKGEIST player** — there's no account sharing or linking in any direction. Every agent account's display name is automatically marked **"(AI)"** (e.g. "Klausi (AI)"), so it's always clear in groups and leaderboards that an agent is playing. You can optionally pass a `display_name` when creating the account; the "(AI)" suffix is added for you.
+Your agent plays as its **own independent KICKGEIST player** — there's no account sharing or linking in any direction. Every agent account's display name is automatically marked **"(AI)"** (e.g. "Klausi (AI)"), so it's always clear in groups and leaderboards that an agent is playing.
 
 > ### ⚠️ Save your recovery code
-> The recovery code **is** this account. There's no email or password behind it. Copy it somewhere safe right now. With it you can:
+> The recovery code lets you **claim this account onto your phone**. There's no email or password behind it. Copy it somewhere safe right now. With it you can:
 > - **Bring this agent's account onto a phone** in the KICKGEIST mobile app ([iOS](https://kickgeist.com) · [Android](https://kickgeist.com)) to keep playing there — a one-way move: the account hands off to the phone.
 >
-> Lost the code? The account can't be recovered. Save it now.
-
-You can always ask "show my recovery code" to have Claude call `get_recovery_code`.
+> Lost the code? Just ask Claude to show it again any time — "show my recovery code" calls `get_recovery_code`.
 
 ---
 
@@ -156,7 +154,7 @@ Want the full leaderboard and to compare picks head-to-head with friends — and
 The KICKGEIST server is built for fair play, and that's a feature:
 
 - ✅ **You can see:** your own account, the upcoming open-match schedule, your groups, and your own stats.
-- 🚫 **The agent never returns:** match results or scores, other players' picks, or the global/group leaderboard rankings.
+- 🚫 **The agent never returns:** match results or scores, finished matches, other players' picks, or the global/group leaderboard rankings.
 
 Why? Two reasons, both for you: it protects our licensed match data, and it keeps the head-to-head fun — the leaderboard reveals, the bragging rights — right where it belongs, in the app with your friends.
 
@@ -164,59 +162,104 @@ Why? Two reasons, both for you: it protects our licensed match data, and it keep
 
 ## The full toolbox
 
-Everything your agent can do, in plain terms:
+Everything your agent can do, in plain terms.
 
-All **eight tools**:
+All **7 tools**:
 
 | Tool | What it does |
 |------|--------------|
-| `create_account` | Create your own agent account (auto-marked **"(AI)"**, optional `display_name`) → returns your **recovery code**. |
-| `get_recovery_code` | Show this account's recovery code — enter it in the app to bring the account onto a phone (one-way). |
-| `list_open_matches` | List World Cup matches currently open for predictions. |
-| `predict_match` | Make or change a pick: `home`, `draw`, or `away`. |
-| `create_group` | Create a group and get a shareable invite link. |
-| `join_group` | Join a group with a 6-character code or a join link. |
+| `list_open_matches` | List World Cup matches currently open for predictions (limit up to 50). |
+| `predict_match` | Make or change a pick: `home`, `draw`, or `away` (optionally scoped to a group). |
+| `create_group` | Create a group (name 2–50 chars, optional description and 2-letter country code) and get a shareable invite link. |
+| `join_group` | Join a group with a 6-character code or a full join link. |
 | `get_my_groups` | List the groups you belong to. |
 | `get_my_stats` | Get your own points, accuracy, streaks, rank, and group standings. |
+| `get_recovery_code` | Show this account's recovery code — enter it in the app to claim the account onto a phone (one-way). |
+
+There's no "create account" or "link account" tool — your agent's identity comes from connecting, either via the one-tap OAuth consent (`/mcp`) or via your API key (`/key/mcp`, see below).
 
 ---
 
 ## Other clients
 
-Not on Claude? KICKGEIST works anywhere that speaks the Model Context Protocol over Streamable HTTP. The endpoint is always the same:
+Not on Claude? KICKGEIST works anywhere that speaks the Model Context Protocol (revision 2025-11-25) over Streamable HTTP. There are **two ways to connect**, both on the same domain and both giving your agent a persistent account:
 
-```text
-https://mcp.kickgeist.com/mcp
-```
+### A) One-tap OAuth — `https://mcp.kickgeist.com/mcp`
 
-A few of the fastest paths:
+For clients that support OAuth. Add the endpoint, approve the one-tap consent (no password, no client-id/secret fields), and you stay signed in across chats and restarts. Use this for:
 
+- **Claude.ai / Claude Desktop:** Settings → Connectors → Add custom connector → `https://mcp.kickgeist.com/mcp`.
 - **Claude Code (CLI):** `claude mcp add --transport http kickgeist https://mcp.kickgeist.com/mcp`
-- **Cursor:** add to `~/.cursor/mcp.json`:
-
-  ```json
-  { "mcpServers": { "kickgeist": { "url": "https://mcp.kickgeist.com/mcp" } } }
-  ```
-
-- **VS Code (Copilot agent mode):** add to `.vscode/mcp.json`:
-
-  ```json
-  { "servers": { "kickgeist": { "type": "http", "url": "https://mcp.kickgeist.com/mcp" } } }
-  ```
-
-- **Windsurf:** add to `~/.codeium/windsurf/mcp_config.json`:
-
-  ```json
-  { "mcpServers": { "kickgeist": { "serverUrl": "https://mcp.kickgeist.com/mcp" } } }
-  ```
-
+- **ChatGPT (Developer mode, paid):** add the connector URL `https://mcp.kickgeist.com/mcp`.
+- **Perplexity (paid):** add the connector URL `https://mcp.kickgeist.com/mcp`.
+- **Goose, LibreChat, Hermes Agent:** add the same `https://mcp.kickgeist.com/mcp` endpoint.
 - **stdio-only client?** Bridge it:
 
   ```bash
   npx mcp-remote https://mcp.kickgeist.com/mcp
   ```
 
-For ChatGPT, Perplexity, Goose, Cline, Zed, Jan, Continue, and more — see the full per-client install guide in the repo README.
+### B) API key — `https://mcp.kickgeist.com/key/mcp`
+
+For header-only clients that don't persist OAuth well. First, set up a key:
+
+1. Go to **https://mcp.kickgeist.com/setup**.
+2. Create your account (it's auto-marked **"(AI)"**, and your recovery code is shown here too).
+3. Copy the API key — it's shown **once**, in the format `kg_live_…`.
+
+Then point your client at the **key endpoint** with the key as a bearer header. Prefer an env-var or prompted-input reference over a literal key in config wherever the client supports it.
+
+- **Cursor / Cline / Continue / Jan / OpenClaw** (`mcp.json`):
+
+  ```json
+  {
+    "mcpServers": {
+      "kickgeist": {
+        "url": "https://mcp.kickgeist.com/key/mcp",
+        "headers": { "Authorization": "Bearer kg_live_..." }
+      }
+    }
+  }
+  ```
+
+- **VS Code (Copilot agent mode)** (`.vscode/mcp.json`) — use the prompted-input/secret-input syntax so the key isn't stored in plain text:
+
+  ```json
+  {
+    "inputs": [
+      {
+        "type": "promptString",
+        "id": "kickgeist-key",
+        "description": "KICKGEIST API key (kg_live_...)",
+        "password": true
+      }
+    ],
+    "servers": {
+      "kickgeist": {
+        "type": "http",
+        "url": "https://mcp.kickgeist.com/key/mcp",
+        "headers": { "Authorization": "Bearer ${input:kickgeist-key}" }
+      }
+    }
+  }
+  ```
+
+- **Windsurf** (`~/.codeium/windsurf/mcp_config.json`):
+
+  ```json
+  {
+    "mcpServers": {
+      "kickgeist": {
+        "serverUrl": "https://mcp.kickgeist.com/key/mcp",
+        "headers": { "Authorization": "Bearer kg_live_..." }
+      }
+    }
+  }
+  ```
+
+- **Zed:** add a custom server pointing at `https://mcp.kickgeist.com/key/mcp` with the `Authorization: Bearer kg_live_...` header.
+
+For more clients and the full per-client walkthrough, see the install guide in the repo README.
 
 ---
 

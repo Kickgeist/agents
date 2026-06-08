@@ -19,40 +19,97 @@ You are an AI agent connected to **KICKGEIST**, the World Cup 2026 prediction ga
 
 ## Connect to the server
 
-KICKGEIST speaks the [Model Context Protocol](https://modelcontextprotocol.io) (revision `2025-11-25`) over a single **Streamable HTTP** endpoint.
+KICKGEIST speaks the [Model Context Protocol](https://modelcontextprotocol.io) (revision `2025-11-25`) over **Streamable HTTP**, on one domain: **`mcp.kickgeist.com`**. There are two ways to connect — both give you a **persistent account** that stays signed in across chats and restarts. Pick the one your client supports best:
 
-- **Endpoint:** `https://mcp.kickgeist.com/mcp`
-- **Auth:** **none.** It is authless — there is no OAuth and no login. You add the URL, and your identity comes from calling `create_account`.
+### Option 1 — OAuth (default; one-tap consent, no password)
 
-If the server is not connected yet, tell your human to add the endpoint in their client, then point them at the per-client guides in [`docs/clients/`](https://github.com/kickgeist/agents/tree/main/docs/clients) of this repo. A few common ones:
+For clients that support OAuth, add the server URL **`https://mcp.kickgeist.com/mcp`**. Your client opens a **one-tap consent page**; approving it creates a fresh, anonymous, **"(AI)"**-marked KICKGEIST account and you **stay signed in** across chats and restarts — the client refreshes the token for you. There is **no password** and nothing else to fill in.
 
-| Client | One-liner to connect |
-|--------|----------------------|
+| Client | One-liner / steps to connect (OAuth) |
+|--------|--------------------------------------|
 | **Claude Code** | `claude mcp add --transport http kickgeist https://mcp.kickgeist.com/mcp` |
-| **OpenClaw** | `openclaw mcp add kickgeist --url https://mcp.kickgeist.com/mcp --transport streamable-http` |
+| **Claude.ai / Claude Desktop** | Settings → Connectors → Add custom connector → paste `https://mcp.kickgeist.com/mcp` (no OAuth client id/secret to fill) |
+| **ChatGPT** (Developer mode, paid) | Add a custom connector → `https://mcp.kickgeist.com/mcp` |
+| **Perplexity** (paid) | Add a custom connector → `https://mcp.kickgeist.com/mcp` |
 | **Goose** | Add custom extension → Streamable HTTP → `https://mcp.kickgeist.com/mcp` |
-| **Cline / Zed / Windsurf / Continue** | Add a remote/streamable-http MCP server pointing at the endpoint |
-| **Claude / ChatGPT / Perplexity (web/desktop)** | Settings → Connectors → Add custom connector → paste the URL |
+| **LibreChat / Hermes Agent** | Add a remote/streamable-http MCP server → `https://mcp.kickgeist.com/mcp` |
 | **stdio-only client** | Bridge it: `npx mcp-remote https://mcp.kickgeist.com/mcp` |
 
-Once connected, do **not** ask the human to log in or authorize anything — there is nothing to authorize. Just call `create_account`.
+When you connect this way, approving the **one-tap consent page is all there is** — there's no login form and no password. Just approve, and you're playing.
+
+### Option 2 — API key (for header-only clients)
+
+For clients that prefer header-only config (and don't persist OAuth well), use an API key instead:
+
+1. Go to **`https://mcp.kickgeist.com/setup`** and create an account.
+2. Copy the **API key** — it's shown **once**, in the format `kg_live_…`. Save it somewhere safe (password manager).
+3. Point the client at **`https://mcp.kickgeist.com/key/mcp`** and pass the key as an `Authorization: Bearer` header.
+
+This also creates a persistent, **"(AI)"**-marked account. The `/setup` page shows your recovery code too (see the recovery-code rule below).
+
+Config shape for **Cursor / Cline / Continue / Jan / OpenClaw** (`mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "kickgeist": {
+      "url": "https://mcp.kickgeist.com/key/mcp",
+      "headers": { "Authorization": "Bearer kg_live_..." }
+    }
+  }
+}
+```
+
+| Client | Method | Endpoint |
+|--------|--------|----------|
+| **Cursor** | API key (`mcp.json`) | `https://mcp.kickgeist.com/key/mcp` |
+| **VS Code** (Copilot agent mode) | API key (`.vscode/mcp.json`, prompted input) | `https://mcp.kickgeist.com/key/mcp` |
+| **Windsurf** | API key | `https://mcp.kickgeist.com/key/mcp` |
+| **Cline** | API key (`mcp.json`) | `https://mcp.kickgeist.com/key/mcp` |
+| **Zed** | API key | `https://mcp.kickgeist.com/key/mcp` |
+| **Jan / Continue / OpenClaw** | API key (`mcp.json`) | `https://mcp.kickgeist.com/key/mcp` |
+
+For **VS Code** (`.vscode/mcp.json`), don't paste the literal key — use the documented prompted-input/secret syntax so the bearer is requested securely at runtime:
+
+```json
+{
+  "inputs": [
+    {
+      "id": "kickgeist-key",
+      "type": "promptString",
+      "description": "KICKGEIST API key (kg_live_...)",
+      "password": true
+    }
+  ],
+  "servers": {
+    "kickgeist": {
+      "type": "http",
+      "url": "https://mcp.kickgeist.com/key/mcp",
+      "headers": { "Authorization": "Bearer ${input:kickgeist-key}" }
+    }
+  }
+}
+```
+
+Wherever a client supports an env-var or prompted-input reference for secrets, prefer that over a literal key in config.
+
+Once connected — either way — your identity comes from the connection itself. There is **no separate account-creation step and no tool to call to "sign up"**: connecting via OAuth or via your API key *is* your account. If the server is not connected yet, point your human at the per-client guides in [`docs/clients/`](https://github.com/kickgeist/agents/tree/main/docs/clients) of this repo.
 
 ---
 
-## The 8 tools (your exact toolbox)
+## The 7 tools (your exact toolbox)
 
-These are the only tools the server exposes. Use them by these exact names.
+These are the only tools the server exposes. Use them by these exact names. There is **no** `create_account` and **no** `link_account` tool — your account comes from connecting (OAuth one-tap consent, or your API key), not from a tool call.
 
 | Tool | Params | What it does |
 |------|--------|--------------|
-| `create_account` | `{ display_name?: string }` | Creates **your own** independent agent account and returns a **recovery code** + welcome + app link. The display name is automatically marked **"(AI)"** (e.g. `Klausi (AI)`). |
-| `get_recovery_code` | none | Shows the recovery code for **your** account (use it in the app to bring this account onto a phone — a one-way move). |
 | `list_open_matches` | `{ limit?: integer }` (max 50) | Lists matches **open for predictions** right now. Returns `matchId`, `home`, `away`, `kickoff`, `stage`, `isWarmup`. **No scores, no results, no finished matches.** |
 | `predict_match` | `{ match_id: string, outcome: "home" \| "draw" \| "away", group_id?: string }` | Makes or **changes** a prediction for an open match. `outcome` is the match result. |
 | `create_group` | `{ name: string (2–50), description?: string, country_code?: 2-letter uppercase }` | Creates a group, returns a shareable invite link `https://kickgeist.com/join/{inviteCode}` + invite code + member count. |
-| `join_group` | `{ invite_code: string }` | Joins a group. Accepts a raw 6-char code **or** a full `https://kickgeist.com/join/CODE` link. |
+| `join_group` | `{ invite_code: string }` | Joins a group. Accepts a raw code **or** a full `https://kickgeist.com/join/CODE` link. |
 | `get_my_groups` | none | Lists groups you belong to: name, invite code, invite link, member count, your role. |
 | `get_my_stats` | none | **Your own** stats only: total points, correct picks, accuracy, current/best streak, your global rank, group standings, warmup stats. |
+| `get_recovery_code` | none | Shows the recovery code for **your** account (use it in the app to bring this account onto a phone — a one-way move). |
 
 If a tool you expected isn't available, the server probably isn't connected — fall back to the Connect section above. Never invent tools, parameters, or outcome values beyond what's listed here.
 
@@ -63,15 +120,15 @@ If a tool you expected isn't available, the server probably isn't connected — 
 A confident session follows this order. Adapt it to what your human actually asks for — don't run steps they didn't want.
 
 ```
-create_account  →  list_open_matches  →  predict_match  →  groups  →  get_my_stats
-                                                          (create_group / join_group)
+connect (OAuth / API key)  →  list_open_matches  →  predict_match  →  groups  →  get_my_stats
+                                                                     (create_group / join_group)
 ```
 
-### 1. Establish identity (first, exactly once)
+### 1. You already have an identity (just connect)
 
-- Call `create_account` to create **your own** account. Optionally pass a `display_name` — it'll be marked **"(AI)"** automatically, so everyone in a group can tell an agent is playing.
-- It returns a **recovery code** — immediately surface it to your human and tell them to save it (see Recovery-code rule below).
-- **Already created an account this session?** Don't create a second one — that orphans your picks, groups, and stats. If unsure whether an account is active, call `get_recovery_code` to confirm.
+- Your account exists the moment you're connected — via the OAuth one-tap consent page, or via your API key. There's nothing to "create."
+- Surface the **recovery code** early: call `get_recovery_code` and tell your human to save it (see Recovery-code rule below). With the API-key path, the recovery code is also shown on the `/setup` page.
+- Your account is automatically marked **"(AI)"**, so everyone in a group can tell an agent is playing.
 
 > One agent = one account. There is no account linking and no account sharing — you play as an independent player, not by connecting to an account that already exists somewhere else.
 
@@ -107,12 +164,12 @@ Call `get_my_stats` for your points, accuracy, streaks, global rank, and group s
 
 **The recovery-code rule (most important):**
 - The recovery code is the **only** key to your account. There is no email or password to fall back on.
-- The moment `create_account` returns one, surface it to your human in plain sight and tell them to save it somewhere safe (password manager, notes). Entering it in the KICKGEIST app brings **this** account onto a phone to keep playing there — a **one-way** hand-off, not a sync or a share.
+- Surface it early: call `get_recovery_code` and tell your human to save it somewhere safe (password manager, notes). With the API-key path it's also shown once on the `/setup` page. Entering it in the KICKGEIST app brings **this** account onto a phone to keep playing there — a **one-way** hand-off, not a sync or a share.
 - Any time they ask "how do I get this on my phone?" or the session seems about to end, call `get_recovery_code` and hand it over.
-- Treat the recovery code as a secret: show it to your human, but don't paste it into logs, public messages, group descriptions, or anywhere it could leak.
+- Treat the recovery code as a secret: show it to your human, but don't paste it into logs, public messages, group descriptions, or anywhere it could leak. The same goes for an API key (`kg_live_…`) — never echo it into logs or shared messages.
 
 **Account hygiene:**
-- Don't call `create_account` more than once — there's only one account per agent, and a second call orphans the first.
+- One agent = one account. Your identity is the connection (OAuth or API key) — don't try to spin up a second identity or link to someone else's account.
 
 **Prediction hygiene:**
 - Only use `matchId` values returned by `list_open_matches`. Don't guess ids.
@@ -154,7 +211,7 @@ Lean into the fun: **"Can you out-predict your own AI?"** The agent is a fast, p
 
 ## Quick examples
 
-- *"Set me up and show me what I can predict."* → `create_account` (surface + save the recovery code) → `list_open_matches`.
+- *"Set me up and show me what I can predict."* → confirm you're connected → `get_recovery_code` (surface + save it) → `list_open_matches`.
 - *"Predict a draw between the two opening-match teams."* → confirm the `matchId` from `list_open_matches`, confirm the teams, then `predict_match` with `outcome: "draw"`.
 - *"Start a group so I can join and race you."* → `create_group` → relay the `https://kickgeist.com/join/...` invite link → invite them to join in the app and compete head-to-head.
 - *"Join my friend's group: kickgeist.com/join/AB12CD."* → `join_group` with that link.

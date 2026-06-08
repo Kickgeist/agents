@@ -1,16 +1,17 @@
 ---
-title: "How we built an authless remote MCP server on Cloudflare for the World Cup"
+title: "How we built a remote MCP server for the World Cup (one URL, one-tap OAuth)"
 published: false
-description: "Point your AI agent at a single URL and let it play the World Cup 2026 as its own player — predicting matches, starting groups, climbing the leaderboard. Here's how we shipped an authless, remote Model Context Protocol server on Cloudflare, and how to connect your own agent in 60 seconds."
-tags: mcp, cloudflare, ai, webdev
+description: "Point your AI agent at a single URL and let it play the World Cup 2026 as its own player — predicting matches, starting groups, climbing the leaderboard. Here's how we shipped a remote Model Context Protocol server with one-tap OAuth (no password), and how to connect your own agent in 60 seconds."
+tags: mcp, ai, webdev, oauth
 canonical_url: https://github.com/kickgeist/agents/blob/main/marketing/devto-article.md
 cover_image:
 ---
 
-> **TL;DR** — KICKGEIST is a free, group-first, zero-money World Cup 2026 prediction game. We built a remote [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server so your AI agent can play it *as its own player*: predicting the outcome of every match, spinning up a group, and tracking its stats — without leaving Claude, Cursor, ChatGPT, Goose, or whatever assistant you already live in. Every agent account is automatically marked **"(AI)"** in groups and leaderboards, so it's always clear a bot is in the mix. It's **authless** (no OAuth, no API key), it runs on Cloudflare, and you connect it by pasting **one URL**:
+> **TL;DR** — KICKGEIST is a free, group-first, zero-money World Cup 2026 prediction game. We built a remote [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server so your AI agent can play it *as its own player*: predicting the outcome of every match, spinning up a group, and tracking its stats — without leaving Claude, Cursor, ChatGPT, Goose, or whatever assistant you already live in. Every agent account is automatically marked **"(AI)"** in groups and leaderboards, so it's always clear a bot is in the mix. It runs on a global serverless edge, and you connect it two ways on one domain — **OAuth with a one-tap consent (no password)** for clients that support it, or an **API key** for header-only clients:
 >
 > ```text
-> https://mcp.kickgeist.com/mcp
+> OAuth (one-tap consent, no password):  https://mcp.kickgeist.com/mcp
+> API key (header-only clients):          https://mcp.kickgeist.com/key/mcp
 > ```
 
 ---
@@ -20,12 +21,12 @@ cover_image:
 Here's the part that still makes us grin. The entire "sign up" flow for getting your agent into the World Cup is:
 
 1. Add one URL to your MCP client.
-2. Ask your agent to create its account.
-3. Save the recovery code it hands back.
+2. Approve the one-tap consent (or paste your API key, depending on your client).
+3. Ask your agent what's open to predict — it's already signed in as its own player.
 
-No login screen. No OAuth consent dance. No API key pasted into a config you'll forget about. You point your agent at `https://mcp.kickgeist.com/mcp`, and the first time you say *"create your KICKGEIST account and show me which matches are open to predict,"* it does exactly that.
+No login screen to fill out. No password. For clients that support OAuth, you point your agent at `https://mcp.kickgeist.com/mcp`, the client opens a **one-tap consent page**, and approving it creates a fresh, anonymous KICKGEIST account on the spot. You **stay signed in** across chats and restarts — the client quietly refreshes the token for you. The first time you say *"show me which matches are open to predict,"* it just works.
 
-That account is real, and it's the agent's own — a fully independent player, automatically named with an **"(AI)"** suffix (think *"Klausi (AI)"*) so everyone in a group can see a bot is competing. The recovery code it hands back is a save point: enter it in the [KICKGEIST mobile app](https://kickgeist.com) (iOS + Android) and the agent's account moves onto your phone so you can keep playing it there — a one-way hand-off, not a sync. And if you want to *follow and challenge* your agent without taking over its account, the better move is a shared group (more on that below).
+That account is real, and it's the agent's own — a fully independent player, automatically named with an **"(AI)"** suffix (think *"Klausi (AI)"*) so everyone in a group can see a bot is competing. The recovery code the agent can hand back is a save point: enter it in the [KICKGEIST mobile app](https://kickgeist.com) (iOS + Android) and the agent's account moves onto your phone so you can keep playing it there — a one-way claim, not a sync. And if you want to *follow and challenge* your agent without taking over its account, the better move is a shared group (more on that below).
 
 This article is the high-level story of how we built that server — the architecture decisions, the trade-offs, and the parts we'd recommend to anyone shipping a remote MCP server in 2026. It is deliberately not a dump of our internals; it's the stuff that's genuinely useful if you're building one too, plus everything you need to connect your own agent and play.
 
@@ -37,23 +38,20 @@ The [Model Context Protocol](https://modelcontextprotocol.io) is an open standar
 
 ---
 
-## Why authless?
+## Two ways to connect — one domain, both persistent
 
-The single biggest UX decision we made was to ship the server **authless**. No OAuth, no bearer token, no "create a developer key first."
+The single biggest UX decision we made was that connecting should feel effortless and the account should *stick*. KICKGEIST is a *zero-money, social* game — there's nothing to protect behind a paywall and no purchase to authorize, so we never wanted onboarding to feel like standing up a developer integration. We landed on two paths on one domain (`mcp.kickgeist.com`), both giving the agent a persistent account:
 
-The reasoning was simple: KICKGEIST is a *zero-money, social* game. There's nothing to protect behind a paywall and no purchase to authorize. Asking a fan to stand up an OAuth client just to predict a football match would be friction with no payoff. So instead of authenticating *before* you can do anything, we let identity be created *by a tool call*:
+- **OAuth, one-tap consent, no password** — the default for clients that support it. You add `https://mcp.kickgeist.com/mcp`, the client pops a single consent page, and approving it mints a fresh, anonymous, **"(AI)"**-marked account. You stay signed in across sessions because the client refreshes the token. There's no OAuth client id or secret to fill in, and no password anywhere.
+- **API key, for header-only clients** — for clients that prefer (or only support) a static header. Visit [`https://mcp.kickgeist.com/setup`](https://mcp.kickgeist.com/setup), create an account, and copy the key (shown **once**, format `kg_live_…`). Point the client at `https://mcp.kickgeist.com/key/mcp` and pass the key as an `Authorization: Bearer` header.
 
-- `create_account` (optional `display_name`) mints a fresh, independent KICKGEIST account for the agent and returns a **recovery code**. The display name is automatically given an **"(AI)"** suffix, so the account is transparently flagged as a bot wherever it shows up.
-- That recovery code is the only credential. Save it, and you can later enter it in the mobile app to move the agent's account onto a phone — a one-way hand-off.
-- `get_recovery_code` shows it again any time you need it.
+Either way, the agent is its own player from the first tool call — no linking, no sharing, no borrowing a human's account. The display name always carries the **"(AI)"** suffix, so the account is transparently flagged as a bot wherever it shows up. `get_recovery_code` returns a code you can enter in the mobile app to claim the agent's account onto a phone — a one-way hand-off.
 
-This is the same anonymous-identity model the KICKGEIST app already uses, exposed through MCP. The agent is its own player from the first tool call — no linking, no sharing, no borrowing a human's account.
-
-> **Design note for builders:** authless does **not** mean unauthenticated forever. Each session establishes an identity through `create_account`, and every subsequent tool call is scoped to *that* account. We just moved the moment of identity from a pre-flight OAuth wall to a first-class tool the model can call conversationally. For a free, social product, that trade is a clear win for onboarding.
+> **Design note for builders:** "one-tap consent, no password" doesn't mean unauthenticated. Each connection establishes a durable identity — via OAuth token or API key — and every tool call is scoped to *that* account. We just kept the friction near zero: a single consent tap, or a single key paste, instead of a multi-field developer-credential form. For a free, social product, that trade is a clear win for onboarding.
 
 ---
 
-## Why Cloudflare?
+## Why a serverless edge?
 
 A World Cup audience is global and spiky. Kickoff times cluster; so does traffic. We wanted the MCP edge to be:
 
@@ -61,30 +59,29 @@ A World Cup audience is global and spiky. Kickoff times cluster; so does traffic
 - **Cheap at idle, elastic under load** — most of the day is quiet, then a match starts and everyone reaches for a pick at once.
 - **Boring to operate** — no servers to babysit during a tournament.
 
-A remote MCP server is, at its core, an HTTP endpoint that speaks the protocol. Running it on Cloudflare's edge gives us the global footprint and the scale-to-zero economics without us standing up infrastructure we'd have to keep alive for a one-summer event. The endpoint is one URL, terminated at the edge, and our game data lives in the same backend the mobile app already talks to. The MCP server is a thin, well-defined protocol layer in front of logic we'd already battle-tested with real users.
+A remote MCP server is, at its core, an HTTP endpoint that speaks the protocol. Running it on a scale-to-zero serverless edge gives us the global footprint and the idle economics without standing up infrastructure we'd have to keep alive for a one-summer event. The endpoint is one URL, terminated at the edge, and our game data lives in the same backend the mobile app already talks to. The MCP server is a thin, well-defined protocol layer in front of logic we'd already battle-tested with real users.
 
 If you're choosing where to host a remote MCP server, the checklist we'd hand you:
 
 - **Pick a transport once.** Streamable HTTP is the current remote transport — go with it, skip the legacy SSE setup.
-- **Keep the server stateless per request where you can.** Identity rides in the session; the heavy state lives in your real backend. The MCP layer stays thin.
+- **Keep the server stateless per request where you can.** Identity rides in the session (OAuth token or API key); the heavy state lives in your real backend. The MCP layer stays thin.
 - **Treat the tool list as your public API.** It is the contract the model reasons over. Name and describe tools the way you'd want a teammate to read them.
 
 ---
 
-## The 8 tools (and why each one earns its place)
+## The 7 tools (and why each one earns its place)
 
-A remote MCP server's tool list *is* its product surface. The model only knows what you tell it, so each tool description doubles as documentation and as the prompt the model plans against. We kept the set deliberately small — eight tools, each with an obvious job:
+A remote MCP server's tool list *is* its product surface. The model only knows what you tell it, so each tool description doubles as documentation and as the prompt the model plans against. We kept the set deliberately small — seven tools, each with an obvious job. There's no "create account" tool: identity comes from connecting (OAuth consent or your API key), so the agent is already a player before it calls anything.
 
 | Tool | Params | What it does |
 |------|--------|--------------|
-| `create_account` | `{ display_name? }` | Creates the agent's own account (auto-marked **"(AI)"**), returns its **recovery code**. Save it. |
-| `get_recovery_code` | none | Shows this account's recovery code — enter it in the app to move the account onto a phone (one-way). |
 | `list_open_matches` | `{ limit? ≤ 50 }` | Lists matches **open for predictions** right now — teams, kickoff, stage. No scores, no results. |
 | `predict_match` | `{ match_id, outcome: "home" \| "draw" \| "away", group_id? }` | Makes or changes a pick: home win, draw, or away win. |
 | `create_group` | `{ name, description?, country_code? }` | Starts a group, returns a shareable `https://kickgeist.com/join/{code}` invite link. |
 | `join_group` | `{ invite_code }` | Joins a group from a 6-char code or a full join link. |
 | `get_my_groups` | none | Lists this account's groups — names, invite links, member counts, role. |
 | `get_my_stats` | none | This account's own scoreboard: points, correct picks, accuracy, streaks, rank, group standings. |
+| `get_recovery_code` | none | Shows this account's recovery code — enter it in the app to claim the account onto a phone (one-way). |
 
 A couple of choices worth calling out:
 
@@ -124,99 +121,43 @@ If you're building an MCP server on top of data you care about, we'd encourage t
 
 ## Connect your agent in 60 seconds
 
-The whole point of an open protocol is that this drops into the client you already use. Pick yours:
+The whole point of an open protocol is that this drops into the client you already use. Two paths, one domain:
 
-### Claude (Desktop / claude.ai)
+- **OAuth clients** (one-tap consent, no password) use `https://mcp.kickgeist.com/mcp`.
+- **API-key clients** (header-only) first grab a key from [`https://mcp.kickgeist.com/setup`](https://mcp.kickgeist.com/setup), then point at `https://mcp.kickgeist.com/key/mcp` with an `Authorization: Bearer kg_live_…` header.
 
-Settings → **Connectors** → **Add custom connector** → paste `https://mcp.kickgeist.com/mcp` → **Add**. No OAuth step. Works on Free (1 connector), Pro, Max, Team, and Enterprise.
+Pick yours below — each entry uses the right method for that client. Where your client supports it, store the key as an env var or prompted secret rather than pasting it literally into a config you'll commit.
+
+### Claude (Desktop / claude.ai) — OAuth
+
+Settings → **Connectors** → **Add custom connector** → paste `https://mcp.kickgeist.com/mcp` → **Add**. A one-tap consent page opens; approve it and you're signed in (no password, no client id/secret to fill). Works on Free (1 connector), Pro, Max, Team, and Enterprise.
 Docs: [getting started with custom connectors](https://support.claude.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp)
 
-### Claude Code (CLI)
+### Claude Code (CLI) — OAuth
 
 ```bash
 claude mcp add --transport http kickgeist https://mcp.kickgeist.com/mcp
 ```
 
-Then `/mcp` to confirm. Docs: [code.claude.com/docs/en/mcp](https://code.claude.com/docs/en/mcp)
+Then `/mcp` to confirm and approve the one-tap consent. Docs: [code.claude.com/docs/en/mcp](https://code.claude.com/docs/en/mcp)
 
-### Cursor (one-click)
+### ChatGPT (paid plans) — OAuth
 
-Use the deep link `cursor://anysphere.cursor-deeplink/mcp/install?name=kickgeist&config=<BASE64>`, where `<BASE64>` is the base64 of `{"url":"https://mcp.kickgeist.com/mcp"}`. Or add to `~/.cursor/mcp.json`:
+Plus / Pro / Business / Enterprise / Edu only (not Free). Settings → Apps & Connectors → Advanced settings → enable **Developer mode** → Create connector → paste `https://mcp.kickgeist.com/mcp` and approve the one-tap consent. Developer mode is labeled "powerful but dangerous," so review what you connect. Docs: [developers.openai.com/api/docs/guides/developer-mode](https://developers.openai.com/api/docs/guides/developer-mode)
 
-```json
-{ "mcpServers": { "kickgeist": { "url": "https://mcp.kickgeist.com/mcp" } } }
-```
+### Perplexity (paid plans) — OAuth
 
-Docs: [cursor.com/docs/context/mcp/install-links](https://cursor.com/docs/context/mcp/install-links)
+Pro / Max / Enterprise. Settings → Connectors → **+ Custom connector** → Remote → enter `https://mcp.kickgeist.com/mcp` and approve the one-tap consent. Docs: [perplexity.ai/help-center](https://www.perplexity.ai/help-center/en/articles/13915507-adding-custom-remote-connectors)
 
-### VS Code (Copilot agent mode, one-click)
-
-Use the `vscode:mcp/install?...` deep link, or add to `.vscode/mcp.json`:
-
-```json
-{ "servers": { "kickgeist": { "type": "http", "url": "https://mcp.kickgeist.com/mcp" } } }
-```
-
-Docs: [code.visualstudio.com/api/extension-guides/ai/mcp](https://code.visualstudio.com/api/extension-guides/ai/mcp)
-
-### Goose (one-click)
+### Goose — OAuth
 
 ```text
 goose://extension?type=streamable_http&url=https%3A%2F%2Fmcp.kickgeist.com%2Fmcp&name=KICKGEIST&description=World%20Cup%20predictions
 ```
 
-Or Desktop → Add custom extension → Streamable HTTP → URL. Docs: [block.github.io/goose](https://block.github.io/goose/docs/getting-started/using-extensions/)
+Or Desktop → Add custom extension → Streamable HTTP → URL `https://mcp.kickgeist.com/mcp`, then approve the consent. Docs: [block.github.io/goose](https://block.github.io/goose/docs/getting-started/using-extensions/)
 
-### ChatGPT (paid plans)
-
-Plus / Pro / Business / Enterprise / Edu only (not Free). Settings → Apps & Connectors → Advanced settings → enable **Developer mode** → Create connector → paste the URL. Developer mode is labeled "powerful but dangerous," so review what you connect. Docs: [developers.openai.com/api/docs/guides/developer-mode](https://developers.openai.com/api/docs/guides/developer-mode)
-
-### Perplexity (paid plans)
-
-Pro / Max / Enterprise. Settings → Connectors → **+ Custom connector** → Remote → enter the https URL. Docs: [perplexity.ai/help-center](https://www.perplexity.ai/help-center/en/articles/13915507-adding-custom-remote-connectors)
-
-### Windsurf
-
-`~/.codeium/windsurf/mcp_config.json`:
-
-```json
-{ "mcpServers": { "kickgeist": { "serverUrl": "https://mcp.kickgeist.com/mcp" } } }
-```
-
-Docs: [docs.windsurf.com/windsurf/cascade/mcp](https://docs.windsurf.com/windsurf/cascade/mcp)
-
-### Cline
-
-Remote Servers tab → name + URL → transport Streamable HTTP. Or mcpServers JSON: `{ "kickgeist": { "url": "https://mcp.kickgeist.com/mcp" } }`. Docs: [docs.cline.bot/mcp/connecting-to-a-remote-server](https://docs.cline.bot/mcp/connecting-to-a-remote-server)
-
-### Zed
-
-`settings.json`:
-
-```json
-{ "context_servers": { "kickgeist": { "url": "https://mcp.kickgeist.com/mcp" } } }
-```
-
-Docs: [zed.dev/docs/ai/mcp](https://zed.dev/docs/ai/mcp)
-
-### Jan
-
-Settings → MCP Servers → **+ Add MCP Server** → transport HTTP (Streamable HTTP) → paste the URL. Docs: [jan.ai/docs](https://jan.ai/docs/desktop/integrations/mcp-servers)
-
-### Continue
-
-`config.yaml`:
-
-```yaml
-mcpServers:
-  - name: KICKGEIST
-    type: streamable-http
-    url: https://mcp.kickgeist.com/mcp
-```
-
-Docs: [docs.continue.dev/customize/deep-dives/mcp](https://docs.continue.dev/customize/deep-dives/mcp)
-
-### LibreChat (self-host, admin)
+### LibreChat (self-host, admin) — OAuth
 
 `librechat.yaml`:
 
@@ -227,28 +168,148 @@ mcpServers:
     url: https://mcp.kickgeist.com/mcp
 ```
 
-Docs: [librechat.ai/docs](https://www.librechat.ai/docs/configuration/librechat_yaml/object_structure/mcp_servers)
+LibreChat handles the OAuth consent flow on first connect. Docs: [librechat.ai/docs](https://www.librechat.ai/docs/configuration/librechat_yaml/object_structure/mcp_servers)
 
-### OpenClaw
+### Hermes Agent (Nous Research) — OAuth
 
-```bash
-openclaw mcp add kickgeist --url https://mcp.kickgeist.com/mcp --transport streamable-http
-openclaw mcp status --verbose
-```
+Add to `~/.hermes/config.yaml` under `mcp_servers`: `kickgeist: { url: https://mcp.kickgeist.com/mcp }`, or run `hermes mcp add`. Approve the one-tap consent on first connect. Docs: [github.com/NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent/blob/main/website/docs/reference/mcp-config-reference.md)
 
-(OpenClaw ships fast — reconfirm the exact config key against the live CLI.) Docs: [github.com/openclaw/openclaw](https://github.com/openclaw/openclaw/blob/main/docs/cli/mcp.md)
-
-### Hermes Agent (Nous Research)
-
-Add to `~/.hermes/config.yaml` under `mcp_servers`: `kickgeist: { url: https://mcp.kickgeist.com/mcp }`, or run `hermes mcp add`. Docs: [github.com/NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent/blob/main/website/docs/reference/mcp-config-reference.md)
-
-### Any stdio-only client (universal bridge)
+### Any stdio-only client (universal bridge) — OAuth
 
 ```bash
 npx mcp-remote https://mcp.kickgeist.com/mcp
 ```
 
-Docs: [npmjs.com/package/mcp-remote](https://www.npmjs.com/package/mcp-remote)
+The bridge opens the one-tap consent in your browser and persists the refreshed token. Docs: [npmjs.com/package/mcp-remote](https://www.npmjs.com/package/mcp-remote)
+
+### Cursor — API key
+
+First create an account and copy your key at [`https://mcp.kickgeist.com/setup`](https://mcp.kickgeist.com/setup) (shown once, `kg_live_…`). Then add to `~/.cursor/mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "kickgeist": {
+      "url": "https://mcp.kickgeist.com/key/mcp",
+      "headers": { "Authorization": "Bearer kg_live_..." }
+    }
+  }
+}
+```
+
+Docs: [cursor.com/docs/context/mcp](https://cursor.com/docs/context/mcp)
+
+### VS Code (Copilot agent mode) — API key
+
+Grab your key at [`https://mcp.kickgeist.com/setup`](https://mcp.kickgeist.com/setup). In `.vscode/mcp.json`, use a prompted **input** for the bearer so the key never lives in the file:
+
+```json
+{
+  "inputs": [
+    {
+      "type": "promptString",
+      "id": "kickgeist-key",
+      "description": "KICKGEIST API key (kg_live_...)",
+      "password": true
+    }
+  ],
+  "servers": {
+    "kickgeist": {
+      "type": "http",
+      "url": "https://mcp.kickgeist.com/key/mcp",
+      "headers": { "Authorization": "Bearer ${input:kickgeist-key}" }
+    }
+  }
+}
+```
+
+VS Code prompts for the key on first use and stores it as a secret. Docs: [code.visualstudio.com/api/extension-guides/ai/mcp](https://code.visualstudio.com/api/extension-guides/ai/mcp)
+
+### Windsurf — API key
+
+Grab your key at [`https://mcp.kickgeist.com/setup`](https://mcp.kickgeist.com/setup), then `~/.codeium/windsurf/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "kickgeist": {
+      "serverUrl": "https://mcp.kickgeist.com/key/mcp",
+      "headers": { "Authorization": "Bearer kg_live_..." }
+    }
+  }
+}
+```
+
+Docs: [docs.windsurf.com/windsurf/cascade/mcp](https://docs.windsurf.com/windsurf/cascade/mcp)
+
+### Cline — API key
+
+Grab your key at [`https://mcp.kickgeist.com/setup`](https://mcp.kickgeist.com/setup). Remote Servers tab → name + URL `https://mcp.kickgeist.com/key/mcp` → transport Streamable HTTP, with an `Authorization: Bearer kg_live_…` header. Or in the mcpServers JSON:
+
+```json
+{
+  "kickgeist": {
+    "url": "https://mcp.kickgeist.com/key/mcp",
+    "headers": { "Authorization": "Bearer kg_live_..." }
+  }
+}
+```
+
+Docs: [docs.cline.bot/mcp/connecting-to-a-remote-server](https://docs.cline.bot/mcp/connecting-to-a-remote-server)
+
+### Zed — API key
+
+Grab your key at [`https://mcp.kickgeist.com/setup`](https://mcp.kickgeist.com/setup), then `settings.json`:
+
+```json
+{
+  "context_servers": {
+    "kickgeist": {
+      "url": "https://mcp.kickgeist.com/key/mcp",
+      "headers": { "Authorization": "Bearer kg_live_..." }
+    }
+  }
+}
+```
+
+Docs: [zed.dev/docs/ai/mcp](https://zed.dev/docs/ai/mcp)
+
+### Jan — API key
+
+Grab your key at [`https://mcp.kickgeist.com/setup`](https://mcp.kickgeist.com/setup). Settings → MCP Servers → **+ Add MCP Server** → transport HTTP (Streamable HTTP) → URL `https://mcp.kickgeist.com/key/mcp`, with an `Authorization: Bearer kg_live_…` header. Docs: [jan.ai/docs](https://jan.ai/docs/desktop/integrations/mcp-servers)
+
+### Continue — API key
+
+Grab your key at [`https://mcp.kickgeist.com/setup`](https://mcp.kickgeist.com/setup), then `config.yaml`:
+
+```yaml
+mcpServers:
+  - name: KICKGEIST
+    type: streamable-http
+    url: https://mcp.kickgeist.com/key/mcp
+    requestOptions:
+      headers:
+        Authorization: "Bearer kg_live_..."
+```
+
+Docs: [docs.continue.dev/customize/deep-dives/mcp](https://docs.continue.dev/customize/deep-dives/mcp)
+
+### OpenClaw — API key
+
+Grab your key at [`https://mcp.kickgeist.com/setup`](https://mcp.kickgeist.com/setup), then in `mcp.json`:
+
+```json
+{
+  "mcpServers": {
+    "kickgeist": {
+      "url": "https://mcp.kickgeist.com/key/mcp",
+      "headers": { "Authorization": "Bearer kg_live_..." }
+    }
+  }
+}
+```
+
+(OpenClaw ships fast — reconfirm the exact config key against the live CLI.) Docs: [github.com/openclaw/openclaw](https://github.com/openclaw/openclaw/blob/main/docs/cli/mcp.md)
 
 ---
 
@@ -256,18 +317,19 @@ Docs: [npmjs.com/package/mcp-remote](https://www.npmjs.com/package/mcp-remote)
 
 If you take three things from how we built this:
 
-1. **Make the tool list read like a great README.** The model plans against your descriptions. Clear names, honest scopes, and small surfaces beat clever ones. Eight well-described tools outperform twenty fuzzy ones.
-2. **Move identity into a tool when the product allows it.** Authless onboarding turned a multi-step OAuth setup into a single pasted URL plus one conversational call — the agent creates its own account and starts playing. For a free, social product, that's the difference between "I'll try it later" and "my agent just made its first pick."
+1. **Make the tool list read like a great README.** The model plans against your descriptions. Clear names, honest scopes, and small surfaces beat clever ones. Seven well-described tools outperform twenty fuzzy ones.
+2. **Make connecting feel like nothing.** A one-tap consent (no password) that keeps the agent signed in across sessions — or a single pasted key for header-only clients — turned a multi-field developer-credential setup into a moment. The agent connects, it's already its own player, and it starts predicting. For a free, social product, that's the difference between "I'll try it later" and "my agent just made its first pick."
 3. **Decide your data boundary first.** "Your own data and the public schedule, nothing more" wasn't a limitation we backed into — it was a fairness design we led with. It protects what's licensed and keeps the joy where it belongs.
 
 ---
 
 ## Play with us
 
-The World Cup is more fun with friends — and now your agent gets its own seat at the table too. Add the endpoint, ask your assistant to create its account, **save the recovery code**, and let it lock in a first pick:
+The World Cup is more fun with friends — and now your agent gets its own seat at the table too. Add the endpoint, approve the one-tap consent (or paste your API key), and let your agent lock in a first pick:
 
 ```text
-https://mcp.kickgeist.com/mcp
+OAuth (one-tap consent, no password):  https://mcp.kickgeist.com/mcp
+API key (header-only clients):          https://mcp.kickgeist.com/key/mcp
 ```
 
 Then ask it to start a group, join with the [KICKGEIST app](https://kickgeist.com), and find out: can you out-predict your own AI?

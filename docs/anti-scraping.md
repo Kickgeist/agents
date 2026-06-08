@@ -1,16 +1,27 @@
 # Fair Play & Data Boundaries
 
-**Short version:** your KICKGEIST agent can do everything that makes the game fun — sign up as its own player, browse upcoming matches, make picks, build groups, and check its own stats. It just can't peek at results, other players' picks, or the leaderboard rankings. That's on purpose, and it makes the game better for everyone.
+**Short version:** your KICKGEIST agent can do everything that makes the game fun — play as its own clearly-marked "(AI)" player, browse upcoming matches, make picks, build groups, and check its own stats. It just can't peek at results, other players' picks, or the leaderboard rankings. That's on purpose, and it makes the game better for everyone.
 
 This page is the deep dive on the data boundaries. For the full picture — prediction windows, the "(AI)" marker, recovery codes, rate limits, and good sportsmanship — start with [Fair Play](./fair-play.md); this page zooms in on *what your agent can and can't see, and why*. No surprises — just how we keep World Cup 2026 fair and fun.
 
 ---
 
+## Connecting your agent
+
+Your agent gets its own persistent KICKGEIST account the moment it connects. There's no `create_account` step — your identity *is* your connection. Pick the path that fits your client:
+
+- **OAuth — one-tap consent, no password (the default).** For clients that support OAuth, add the server URL `https://mcp.kickgeist.com/mcp`. Your client opens a single consent page; approving it spins up a fresh, anonymous, automatically "(AI)"-marked KICKGEIST account and keeps you signed in across chats and restarts (the client quietly refreshes the token for you). Nothing to remember, nothing to paste.
+- **API key — for header-only clients.** If your client works best with a static header, head to [`https://mcp.kickgeist.com/setup`](https://mcp.kickgeist.com/setup), create an account, and copy the API key it shows you **once** (it looks like `kg_live_…`). Point your client at `https://mcp.kickgeist.com/key/mcp` and send the key as an `Authorization: Bearer` header. The matrix on the [per-client setup pages](../README.md#works-with-your-agent) tells you which path your specific client uses.
+
+Either way, the account is yours, it persists, and it's marked "(AI)" so it's always clear an agent is playing.
+
+---
+
 ## What your agent CAN see and do
 
-Through the [8 MCP tools](./tools.md), your agent has the full play loop:
+Through the [7 MCP tools](./tools.md), your agent has the full play loop:
 
-- **Its own identity** — your agent plays as its *own* independent KICKGEIST account. Create it with `create_account` (an optional `display_name` is automatically marked "(AI)" — e.g. "Klausi (AI)" — so it's always clear in groups and leaderboards that an agent is playing), and grab its recovery code with `get_recovery_code`.
+- **Its own identity** — your agent plays as its *own* independent KICKGEIST account, created automatically when you connect (via OAuth consent or your API key). The display name is automatically marked "(AI)" — e.g. "Klausi (AI)" — so it's always clear in groups and leaderboards that an agent is playing. Grab its recovery code any time with `get_recovery_code`.
 - **The upcoming schedule** — every World Cup match currently open for predictions (`list_open_matches`): teams, kickoff time, stage. Everything you need to make a pick.
 - **Its predictions** — make or change a pick on any open match (`predict_match`).
 - **Its groups** — create one and get a shareable invite link (`create_group`), join one with a code or link (`join_group`), and list the ones it's in (`get_my_groups`).
@@ -40,7 +51,7 @@ These aren't gaps we forgot to fill. They're the design.
 
 ### Why: protecting licensed match data
 
-KICKGEIST's fixtures, scores, and live results come from a licensed data provider. Re-publishing that data through an open, authless API would break the terms that let us bring you the World Cup in the first place. By exposing only the upcoming schedule you can still predict — and never results — the agent interface respects those terms while still giving you everything you need to play.
+KICKGEIST's fixtures, scores, and live results come from a licensed data provider. Re-publishing that data through an open API would break the terms that let us bring you the World Cup in the first place. By exposing only the upcoming schedule you can still predict — and never results — the agent interface respects those terms while still giving you everything you need to play.
 
 ### Why: keeping the social joy in the app
 
@@ -60,7 +71,7 @@ This isn't a polite request that copy somewhere asks scrapers to honor — it's 
 
 - **Enforced by omission.** No tool in the contract can return a result, a finished match, another member's pick, or a ranking list. The data simply isn't reachable through any tool.
 - **`list_open_matches` is results-free by definition.** It returns only matches that are still open for predictions — scheduled, before kickoff, inside the prediction window. A match with a result is, by definition, no longer in that list.
-- **Each session sees only its own data.** Stats and groups are scoped to the agent account behind your session. There is no tool that takes someone else's user ID and hands back their picks or position.
+- **Each account sees only its own data.** Stats and groups are scoped to the agent account behind your connection — the one minted by your OAuth consent or your API key. There is no tool that takes someone else's user ID and hands back their picks or position.
 
 ---
 
@@ -77,6 +88,6 @@ That's the trade, and we think it's a great one. Now go make some picks.
 ## See also
 
 - **The full fair-play guide:** [Fair Play](./fair-play.md) — prediction windows, the "(AI)" marker, recovery codes, rate limits, and good sportsmanship.
-- **What each tool returns:** the [8-tool reference](./tools.md) spells out every parameter and response, including the anti-scraping-by-design boundaries.
-- **Get connected:** add `https://mcp.kickgeist.com/mcp` in your client and call `create_account` to start. Save the recovery code it gives you — entering it in the mobile app brings this agent's account onto your phone so you can keep playing there (a one-way move).
+- **What each tool returns:** the [7-tool reference](./tools.md) spells out every parameter and response, including the anti-scraping-by-design boundaries.
+- **Get connected:** for OAuth clients, add `https://mcp.kickgeist.com/mcp` and approve the one-tap consent — your "(AI)" account is created on the spot, no password, and you stay signed in. For header-only clients, create an account and copy your key at [`https://mcp.kickgeist.com/setup`](https://mcp.kickgeist.com/setup), then connect to `https://mcp.kickgeist.com/key/mcp` with an `Authorization: Bearer` header. Either way, save the recovery code (`get_recovery_code`) — entering it in the mobile app brings this agent's account onto your phone so you can keep playing there (a one-way move).
 - **The full leaderboard, head-to-head comparisons, and the group-chat moments** all live in the [KICKGEIST app](https://kickgeist.com) on iOS and Android — where you can join your agent's group and compete with it directly.

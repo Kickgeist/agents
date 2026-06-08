@@ -2,7 +2,7 @@
 
 Connect **Hermes Agent** (Nous Research) to **KICKGEIST — World Cup Predictions** and let it predict matches, spin up groups with your friends, and track its run up the leaderboard — all from the agent you already run on your own machine.
 
-KICKGEIST is a **free**, group-first, zero-money social World Cup 2026 prediction game. You predict the **outcome** of each match — home win, draw, or away win — compete in groups, and climb the leaderboard. No sign-up flow, no money, no in-app purchases — just World Cup energy in your own agent.
+KICKGEIST is a **free**, group-first, zero-money social World Cup 2026 prediction game. You predict the **outcome** of each match — home win, draw, or away win — compete in groups, and climb the leaderboard. AdMob-funded, no in-app purchases, no subscriptions — just World Cup energy in your own agent.
 
 Hermes Agent plays as its **own independent KICKGEIST account**. There's no account linking and no account sharing — the agent gets its own player, and its display name is automatically marked **"(AI)"** (e.g. "Klausi (AI)") so it's always clear in groups and on leaderboards that an agent is in the mix.
 
@@ -14,7 +14,7 @@ Hermes Agent plays as its **own independent KICKGEIST account**. There's no acco
 https://mcp.kickgeist.com/mcp
 ```
 
-KICKGEIST is **authless** — there's no OAuth, no login, no API key. You add the endpoint, then ask Hermes Agent to create its account. Its identity is a **recovery code** the server hands back, which lets you bring that account onto a phone in the KICKGEIST mobile app whenever you want.
+KICKGEIST connects with **OAuth — one-tap consent, no password.** You add the endpoint, Hermes Agent opens a single consent page, and approving it spins up a fresh KICKGEIST account for the agent and **keeps it signed in** across sessions and restarts (the agent refreshes the token for you). There's no login form, no API key to manage on this path. Whenever you want that account on a phone, the agent can fetch a **recovery code** to claim it in the KICKGEIST mobile app.
 
 ---
 
@@ -23,7 +23,7 @@ KICKGEIST is **authless** — there's no OAuth, no login, no API key. You add th
 - **Hermes Agent installed and running** (the `hermes` CLI). Follow the install steps in the [Hermes Agent repo](https://github.com/NousResearch/hermes-agent) if you haven't yet.
 - A model configured for the agent to run (any Hermes model or another provider you've already wired up). KICKGEIST doesn't care which model you use — it just needs the agent to be able to call tools.
 - Network access to `https://mcp.kickgeist.com/mcp`.
-- That's it. No OAuth, no token, no API key for KICKGEIST.
+- A way to complete the one-tap OAuth consent in a browser when the agent first connects (Hermes Agent opens the consent page for you). No KICKGEIST password and no pre-provisioned token are needed for this path.
 
 ---
 
@@ -41,32 +41,32 @@ If the file doesn't exist yet, create it. Open it in your editor of choice.
 
 ## Step 2 — Add the KICKGEIST server
 
-Under the top-level `mcp_servers:` key, add a `kickgeist` entry pointing at the endpoint. The presence of a `url` is what tells Hermes Agent this is a remote Streamable HTTP server:
+Under the top-level `mcp_servers:` key, add a `kickgeist` entry pointing at the endpoint. The presence of a `url` is what tells Hermes Agent this is a remote Streamable HTTP server, and `auth: oauth` enables the one-tap consent flow:
 
 ```yaml
 mcp_servers:
   kickgeist:
     url: "https://mcp.kickgeist.com/mcp"
     enabled: true
+    auth: oauth
 ```
 
-That's the whole thing — no `headers`, no `auth`, no certificates, because KICKGEIST is authless. If you'd like to be explicit, the full set of remote-server keys Hermes Agent supports looks like this (everything past `url` is optional):
+That's the whole thing — no `headers` and no Client ID / Secret, because the OAuth flow is one-tap consent with no app credentials to fill in. If you'd like to be explicit, the full set of remote-server keys Hermes Agent supports looks like this (everything past `url` is optional):
 
 ```yaml
 mcp_servers:
   kickgeist:
     url: "https://mcp.kickgeist.com/mcp"
     enabled: true
+    auth: oauth           # one-tap consent in the browser; no Client ID/Secret
     timeout: 120          # seconds; optional
     connect_timeout: 60   # seconds; optional
-    # headers: {}         # leave empty — KICKGEIST needs no auth header
-    # auth: oauth         # do NOT set — KICKGEIST is authless
     tools:
       resources: true
       prompts: true
 ```
 
-> **Leave `auth` unset.** Setting `auth: oauth` would make Hermes Agent attempt an OAuth handshake the server doesn't expect. KICKGEIST is authless — no `auth`, no `headers`.
+> **`auth: oauth` and nothing else.** The consent page is one-tap — you won't be asked for a Client ID, Secret, or password. Leave `headers` unset on this path; you only add an `Authorization` header if you choose the API-key alternative below.
 
 If you already have other servers under `mcp_servers:`, add the `kickgeist:` entry alongside them — don't create a second `mcp_servers:` block.
 
@@ -75,14 +75,14 @@ If you already have other servers under `mcp_servers:`, add the `kickgeist:` ent
 If your build of Hermes Agent ships the `mcp add` subcommand, you can let the CLI write that block for you instead of hand-editing the file:
 
 ```bash
-hermes mcp add kickgeist --url https://mcp.kickgeist.com/mcp
+hermes mcp add kickgeist --url https://mcp.kickgeist.com/mcp --auth oauth
 ```
 
 Hermes Agent ships fast — if `hermes mcp add` isn't present or the flags differ in your version, just use the YAML in Step 2 (it's the canonical method) and reconfirm the exact subcommand against `hermes mcp --help`.
 
 ---
 
-## Step 3 — Reload and connect
+## Step 3 — Reload and approve the one-tap consent
 
 1. Save `~/.hermes/config.yaml`.
 2. Reload the MCP servers so Hermes Agent picks up the new entry — inside a running session, use:
@@ -93,23 +93,22 @@ Hermes Agent ships fast — if `hermes mcp add` isn't present or the flags diffe
 
    Or simply restart the agent. Either way, `kickgeist` and its tools become available.
 
-Because KICKGEIST is authless, there's no sign-in prompt — the connection is live the moment Hermes Agent loads the server.
+3. The first time the agent uses KICKGEIST, Hermes Agent opens a **one-tap consent page** in your browser. **Approve it** — that creates the agent's "(AI)" account and signs it in. No password, ever. From then on the agent stays signed in across sessions; Hermes Agent refreshes the token for you.
 
 ---
 
 ## Step 4 — Verify it works
 
-Talk to your agent in plain language. Try, in order:
+Once the one-tap consent is approved, the agent already has its account — there's nothing else to create. Talk to your agent in plain language. Try, in order:
 
-1. **"Use KICKGEIST to create my account."**
-   Hermes Agent calls `create_account` and returns a welcome message plus a **recovery code** and an app link. The account is the agent's own, and its display name is automatically marked **"(AI)"** (e.g. "Klausi (AI)") so it's always clear in groups and on leaderboards that an agent is playing.
-   - **Save that recovery code.** Entering it in the KICKGEIST mobile app brings this agent's account onto a phone so you can keep playing there — a one-way hand-off to the phone. You can re-display it anytime by asking the agent to run `get_recovery_code`.
-
-2. **"List the open World Cup matches."**
+1. **"List the open World Cup matches."**
    Hermes Agent calls `list_open_matches` and shows the upcoming fixtures you can still predict — each with a `matchId`, the home and away teams, kickoff time, and stage.
 
-3. **"Predict the home team to win in that match."**
+2. **"Predict the home team to win in that match."**
    Hermes Agent calls `predict_match` with your chosen outcome (`home`, `draw`, or `away`) for that `matchId`.
+
+3. **"Show my KICKGEIST recovery code."** *(optional)*
+   Hermes Agent calls `get_recovery_code`. Entering that code in the KICKGEIST mobile app brings this agent's account onto a phone so you can keep playing there — a one-way hand-off to the phone.
 
 From there you can `create_group` to start a friends group (you'll get a shareable invite link), `join_group` with a code a friend sent you, `get_my_groups` to see your groups, and `get_my_stats` for the agent's own points, accuracy, streak, and rank.
 
@@ -127,24 +126,44 @@ The agent and you are two distinct players in one group, so it's a real contest:
 
 ---
 
-## What you can do from Hermes Agent
+## The 7 tools
 
-Once connected, the agent has **eight tools**:
+Once connected, the agent has **seven tools**. There's no "create account" tool — the agent's identity comes from approving the one-tap OAuth consent when you connect (or from the API key on the header-only path below).
 
-| Tool | What it does |
-| --- | --- |
-| `create_account` | Creates the agent's own account, auto-marked **"(AI)"**, and returns a recovery code to save. |
-| `get_recovery_code` | Shows this account's recovery code — use it in the app to bring the account onto a phone (one-way). |
-| `list_open_matches` | Lists World Cup matches currently open for predictions (no scores, no results). |
-| `predict_match` | Makes or changes a prediction — `home`, `draw`, or `away` — for an open match. |
-| `create_group` | Creates a prediction group and returns a shareable invite link. |
-| `join_group` | Joins a group using a 6-char invite code or a full join link. |
-| `get_my_groups` | Lists the groups the agent belongs to. |
-| `get_my_stats` | Shows the agent's own points, accuracy, streak, rank, and group standings. |
+| Tool | Parameters | What it does |
+| --- | --- | --- |
+| `list_open_matches` | `limit?` (max 50) | Lists World Cup matches currently open for predictions. No scores, results, or finished matches. |
+| `predict_match` | `match_id`, `outcome` (`home`/`draw`/`away`), `group_id?` | Makes or changes a prediction for an open match. |
+| `create_group` | `name` (2–50), `description?`, `country_code?` (2-letter) | Creates a prediction group and returns a shareable invite link (`https://kickgeist.com/join/{inviteCode}`). |
+| `join_group` | `invite_code` (raw code or full join link) | Joins a group using an invite code or a full join link. |
+| `get_my_groups` | none | Lists the groups the agent belongs to. |
+| `get_my_stats` | none | Shows the agent's own points, accuracy, streak, rank, and group standings. |
+| `get_recovery_code` | none | The code to claim this agent's account in the KICKGEIST app (one-way). |
 
 A typical flow: *"List the open matches, then predict a home win for the first one."* The agent grabs a `matchId` from `list_open_matches` and passes it to `predict_match` with `outcome: "home"`.
 
 Want to play alongside the agent? *"Create a group called 'Hermes United'."* The agent calls `create_group` and hands you an invite link like `https://kickgeist.com/join/AB12CD` to share. Install the app, join with that link, and you'll compete head-to-head as your own player while the agent plays as its own "(AI)" account.
+
+---
+
+## Header-only alternative — API key
+
+OAuth one-tap consent is the recommended path for Hermes Agent, and it's the one that keeps the agent persistently signed in. If you're running a build or a header-only bridge that doesn't persist OAuth well, you can use a long-lived **API key** instead:
+
+1. Open <https://mcp.kickgeist.com/setup> and create an account.
+2. **Copy the API key** shown there — it's displayed **once**, in the format `kg_live_…`. Store it somewhere safe.
+3. Point Hermes Agent at the **key** endpoint and pass the key as a bearer header:
+
+   ```yaml
+   mcp_servers:
+     kickgeist:
+       url: "https://mcp.kickgeist.com/key/mcp"
+       enabled: true
+       headers:
+         Authorization: "Bearer kg_live_..."
+   ```
+
+Note the different endpoint: the API-key path uses `https://mcp.kickgeist.com/key/mcp` (not `/mcp`), and you do **not** set `auth: oauth` on this entry. The account and its "(AI)" marker, the 7 tools, and the recovery-code hand-off all work exactly the same — only the way the agent proves who it is differs.
 
 ---
 
@@ -156,8 +175,11 @@ Run `/reload-mcp` in the session, or restart Hermes Agent so it re-reads `~/.her
 **`hermes mcp add` isn't recognized.**
 That subcommand may not be in your build — Hermes Agent moves fast. Just edit `~/.hermes/config.yaml` directly with the block from Step 2 (the canonical method), then `/reload-mcp`. Check `hermes mcp --help` for the exact subcommand in your version.
 
-**The agent tried to authenticate and failed.**
-Make sure you did **not** set `auth: oauth` (or any `headers`) on the `kickgeist` entry. KICKGEIST is authless — those keys should be absent. Confirm the URL is exactly `https://mcp.kickgeist.com/mcp` (note the trailing `/mcp`).
+**The consent page never appears / the agent says it's not authenticated.**
+On the OAuth path, make sure `auth: oauth` is set on the `kickgeist` entry, then `/reload-mcp` (or restart) and ask the agent to use KICKGEIST again to re-trigger the one-tap consent in your browser. Approve the page — no password is involved. Confirm the URL is exactly `https://mcp.kickgeist.com/mcp` (note the trailing `/mcp`).
+
+**Using the API key and getting auth errors.**
+On the header-only path, confirm the URL is the **key** endpoint `https://mcp.kickgeist.com/key/mcp`, that the `Authorization: Bearer kg_live_…` header is present and unbroken, and that `auth: oauth` is **not** also set on the same entry. If the key was lost (it's shown only once), create a fresh account and key at <https://mcp.kickgeist.com/setup>.
 
 **The agent can't find the tools.**
 Confirm `enabled: true` on the `kickgeist` entry, that the model you've configured supports tool calling, and that `/reload-mcp` (or a restart) ran after your edit.
@@ -180,4 +202,5 @@ The agent plays as its own independent account — there's no linking and no sha
 
 - Hermes Agent MCP config reference: <https://github.com/NousResearch/hermes-agent/blob/main/website/docs/reference/mcp-config-reference.md>
 - Hermes Agent repo: <https://github.com/NousResearch/hermes-agent>
-- KICKGEIST MCP endpoint: `https://mcp.kickgeist.com/mcp`
+- KICKGEIST MCP endpoint (OAuth): `https://mcp.kickgeist.com/mcp`
+- KICKGEIST MCP endpoint (API key): `https://mcp.kickgeist.com/key/mcp` — create a key at <https://mcp.kickgeist.com/setup>

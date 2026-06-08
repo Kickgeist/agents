@@ -16,41 +16,54 @@ KICKGEIST is a **group-first, zero-money, social World Cup 2026 prediction game*
 
 **Your agent plays as its own independent KICKGEIST account.** There's no account sharing and no account linking in any direction — the agent is its own player. Every agent account is automatically marked **"(AI)"** in its display name (e.g. *"Klausi (AI)"*), so it's always clear in groups and leaderboards that an agent is doing the predicting. That transparency is part of the fun.
 
-Your job with this skill: help the agent create its account, find the matches that are open, lock in picks, rally friends into a group, and check how the agent is doing — all in a warm, World-Cup-energy, friend-to-friend voice. Use **inclusive prediction language** only: *predict, pick, prediction*. Never use gambling words (bet, wager, odds, stake, betting).
+Your job with this skill: help connect the agent so it gets its own account, find the matches that are open, lock in picks, rally friends into a group, and check how the agent is doing — all in a warm, World-Cup-energy, friend-to-friend voice. Use **inclusive prediction language** only: *predict, pick, prediction*. Never use gambling words (bet, wager, odds, stake, betting).
 
 ## Connection (one-time)
 
-The KICKGEIST MCP server is **authless** — no OAuth, no login. The user just adds the URL, then this skill's tools become available.
+**Your identity comes from connecting — there's no "create account" step.** The moment you connect, you get a fresh, anonymous, **"(AI)"**-marked KICKGEIST account that stays yours across chats and restarts. For Claude (web, Desktop, and Code), use the **OAuth** path below — it's one-tap consent, no password.
+
+### OAuth — one-tap consent, no password (recommended for Claude)
+
+Add the server URL. The first time the agent uses it, Claude opens a single **consent page**; approving it creates the agent's account and keeps it **signed in across chats and restarts** (Claude refreshes the token for you). There's no login, no password, and **no** OAuth Client ID / Secret fields to fill in.
 
 ```text
 https://mcp.kickgeist.com/mcp
 ```
 
-- **Claude Desktop / claude.ai:** Settings → Connectors → Add custom connector → paste the URL → Add. (See `support.claude.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp`.)
-- **Claude Code (CLI):** `claude mcp add --transport http kickgeist https://mcp.kickgeist.com/mcp`, then `/mcp` to confirm. (See `code.claude.com/docs/en/mcp`.)
+- **Claude Desktop / claude.ai:** Settings → Connectors → Add custom connector → paste the URL → Add. Leave any Advanced settings as-is — there's nothing to enter. The first use opens the one-tap consent page; approve it. (See `support.claude.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp`.)
+- **Claude Code (CLI):** `claude mcp add --transport http kickgeist https://mcp.kickgeist.com/mcp`, then `/mcp` to confirm. The first time, run `/mcp`, select **kickgeist**, and choose **Authenticate** — Claude Code opens the consent page in your browser. Approve it (no password) and the account is created and stays signed in. (See `code.claude.com/docs/en/mcp`.)
 
-If the tools below aren't available yet, walk the user through that one-time step first. There is no "Add to Claude" deep link and no login — just the URL.
+If the tools below aren't available yet, walk the user through that one-time step first. There's no "Add to Claude" deep link — just the URL and a one-tap consent.
 
-## The 8 tools
+### API key — for header-only bridges (advanced fallback)
+
+If you're driving Claude through a header-only bridge that doesn't persist an OAuth session, you can connect with an API key instead:
+
+1. Visit **`https://mcp.kickgeist.com/setup`** and create the account there.
+2. Copy the **API key** — it's shown **once**, in the form `kg_live_…`. Save it somewhere safe.
+3. Point that client at `https://mcp.kickgeist.com/key/mcp` and send the key as an `Authorization: Bearer kg_live_…` header. Prefer an environment variable or a prompted-input/secret reference over a literal key in a committed config, wherever the client supports it.
+
+For claude.ai, Claude Desktop, and Claude Code, the OAuth path above is the recommended one — this key path is only for header-only setups that can't hold an OAuth session.
+
+## The 7 tools
+
+There's no "create account" tool — the agent's identity comes from connecting (OAuth one-tap consent at `/mcp`, or your API key at `/key/mcp`).
 
 | Tool | What it does |
 |------|--------------|
-| `create_account` | Create this agent's own KICKGEIST account (optional `display_name`; the **"(AI)"** suffix is added automatically). Returns a **recovery code** to save. |
-| `get_recovery_code` | Show the recovery code for this agent's account. |
 | `list_open_matches` | List matches **open for predictions** right now (`limit?` up to 50). Source of `matchId`. |
 | `predict_match` | Make or change a pick: `match_id`, `outcome` (`"home"` / `"draw"` / `"away"`), optional `group_id`. |
 | `create_group` | Start a group: `name` (2–50 chars), optional `description`, optional `country_code` (2-letter uppercase). Returns an invite link. |
 | `join_group` | Join a group with `invite_code` (a raw 6-char code **or** a full `https://kickgeist.com/join/CODE` link). |
 | `get_my_groups` | List the groups this agent belongs to (name, invite code/link, member count, role). |
 | `get_my_stats` | This agent's **own** points, accuracy, current/best streak, rank, group standings, and warmup stats. |
+| `get_recovery_code` | Show this account's recovery code — the code to claim this agent's account in the KICKGEIST app. |
 
 ## The play workflow
 
-Follow this order. Don't skip identity, and don't invent match ids.
+Follow this order. Don't invent match ids.
 
-1. **Get an identity first.**
-   - **First time playing?** Call `create_account` (you can pass a fun `display_name` — KICKGEIST appends **"(AI)"** automatically). **Immediately surface the recovery code** to the user and tell them to save it — it's the only key to this agent's account (see Recovery-code UX below).
-   - **Already have an account from a previous session?** Call `get_recovery_code` to confirm there's an active account and show the code to save. Don't spin up a second account for the same agent.
+1. **Make sure you're connected.** Connecting *is* your identity — the OAuth one-tap consent (or your API key) gives the agent its own **"(AI)"** account, and it stays yours across chats and restarts. If the tools aren't showing up yet, walk the user through the one-time connection step above first. There's nothing to "create" once you're connected.
 
 2. **Find what's open.** Call `list_open_matches` (use `limit` if you want more, up to 50). Present matchups in plain language — *"Brazil vs. Croatia, kicks off Sat 14:00, group stage"* — and keep the `matchId` for each so you can predict. If a match isn't in this list, its window has closed; you can't predict it.
 
@@ -72,15 +85,13 @@ Timing is the heart of the game. Always confirm a match is open with `list_open_
 
 If a `matchId` you remember from earlier isn't in a fresh `list_open_matches`, its window has closed — re-list rather than guessing.
 
-## Recovery-code UX (do this every time)
+## Recovery-code UX
 
-The recovery code is the master key to this agent's account — treat it like the keys to the stadium.
+The recovery code is what brings this agent's account onto a phone — treat it like the keys to the stadium.
 
-- **The moment `create_account` returns it, surface the recovery code prominently and tell the user to save it.** Suggest a password manager or note. It's the only way back to this account.
-- **Entering it in the KICKGEIST mobile app brings this agent's account onto a phone** to keep playing there — a **one-way** hand-off. (It moves the account to the phone; it doesn't link, sync, or share between the agent and the app.)
+- **Entering it in the KICKGEIST mobile app claims this agent's account onto a phone** to keep playing there — a **one-way** hand-off. (It moves the account to the phone; it doesn't link, sync, or share between the agent and the app.)
+- **Surface it when the user wants their account on their phone.** Call `get_recovery_code`, show the code prominently, and tell them to save it (a password manager or note works). If you connected via the API key, the code is also shown at `https://mcp.kickgeist.com/setup`.
 - **Keep it private.** Anyone with the recovery code can act as this account. Share **invite links** with friends — never the recovery code.
-- Need it again later? `get_recovery_code` shows it for the active account.
-- Lose the code and the path back to that account is gone, so confirm they've saved it before moving on.
 
 ## App nudge
 
@@ -96,7 +107,7 @@ The fun way for a human to follow along is to **join the agent's group in the ap
 The server intentionally exposes only **the agent's own data** and the **upcoming open-match schedule**. Frame this as a feature, not a limitation:
 
 - It **never** returns match scores/results, other players' picks, or the global/group leaderboards. That protects our licensed match data and keeps the social fun in the app. If a user asks for results or someone else's standing, explain warmly that those live in the app by design.
-- **One account per agent.** Don't create accounts in bulk to pad a group or farm rankings — the agent is a single player, transparently marked **"(AI)"**.
+- **One account per agent.** Connecting establishes a single, persistent account — don't try to spin up extras to pad a group or farm rankings. The agent is a single player, transparently marked **"(AI)"**.
 - **Be a considerate guest.** Human-paced use — listing matches, picking, checking stats, running groups — is exactly right. No scraping or flooding. If you hit a rate limit, pause briefly and retry; the pick isn't going anywhere and the window won't seal the instant a limit trips.
 - **Keep it positive.** Group names and descriptions are seen by everyone invited — keep them welcoming.
 

@@ -1,6 +1,6 @@
 # X / Twitter launch thread
 
-A ready-to-post launch thread for KICKGEIST's MCP server. 8 posts, dev-flavored, one-click hook, clear CTA.
+A ready-to-post launch thread for KICKGEIST's MCP server. 9 posts, dev-flavored, one-tap hook, clear CTA.
 
 - Voice: warm, World-Cup energy, technically precise. Inclusive prediction language only — no gambling terms.
 - Each post is kept around the 280-char mark. Counts noted in the comments for your reference (`<!-- ... -->`); strip them before posting.
@@ -9,7 +9,7 @@ A ready-to-post launch thread for KICKGEIST's MCP server. 8 posts, dev-flavored,
 ---
 
 ## Post 1 — the hook
-<!-- 270 chars -->
+<!-- 268 chars -->
 
 Point your AI agent at one URL and it plays the World Cup — as its own player. 🌍⚽
 
@@ -17,7 +17,7 @@ KICKGEIST now speaks MCP. Your agent predicts every match, starts a group, climb
 
 🧵👇
 
-<!-- media: short screen recording of asking an agent "create my KICKGEIST account and show me open matches" -->
+<!-- media: short screen recording of asking an agent "connect to KICKGEIST and show me open matches" -->
 
 ---
 
@@ -32,80 +32,92 @@ You predict the outcome of each match — home win, draw, or away win — and ra
 
 ---
 
-## Post 3 — the authless magic
-<!-- 268 chars -->
+## Post 3 — connecting is painless
+<!-- 276 chars -->
 
-The part devs will like: it's authless.
+The part devs will like: connecting is painless.
 
-No OAuth dance. No API key to paste. You add the endpoint:
+Most clients use OAuth — add the URL, hit one tap on the consent page, no password. You stay signed in across chats and restarts.
 
 https://mcp.kickgeist.com/mcp
 
-…then your agent calls `create_account` and gets a recovery code. Save it — pop it into the KICKGEIST app to bring this agent's account onto your phone. Done.
+Approving spins up a fresh, anonymous "(AI)" player for your agent.
 
 ---
 
-## Post 4 — one-click install
-<!-- 247 chars -->
+## Post 4 — pick your path
+<!-- 279 chars -->
 
-One-click for the big clients:
+Two ways in, one domain:
 
-▶️ Cursor — deep-link install
-▶️ VS Code (Copilot agent mode) — one click
-▶️ Goose — one click
+🔑 OAuth (one tap, no password) → /mcp
+Claude, Claude Code, ChatGPT, Perplexity, Goose, LibreChat & more.
 
-Everyone else (Claude, ChatGPT, Perplexity, Windsurf, Cline, Zed, Jan, Continue…) is a single URL paste.
+🔑 API key → grab one at mcp.kickgeist.com/setup, paste it as a Bearer header → /key/mcp
+Cursor, VS Code, Windsurf, Cline, Zed, Jan, Continue.
 
-Buttons in the repo 👇
+Guides 👇
 
-<!-- media: the three "Add to" badges from ../badges/ -->
+<!-- media: the "Add to" badges from ../badges/ -->
 
 ---
 
 ## Post 5 — Claude in 60 seconds
-<!-- 233 chars -->
+<!-- 246 chars -->
 
-Claude, start to finish:
+Claude, start to finish (OAuth, one tap):
 
-Desktop/web → Settings → Connectors → Add custom connector → paste the URL → Add.
+Desktop/web → Settings → Connectors → Add custom connector → paste https://mcp.kickgeist.com/mcp → approve.
 
 Claude Code:
 
   claude mcp add --transport http kickgeist https://mcp.kickgeist.com/mcp
 
-Then just ask: "create my account and show me open matches."
+Then ask: "show me open matches."
 
 ---
 
-## Post 6 — the 8 tools, plain language
-<!-- 270 chars -->
+## Post 6 — Cursor & VS Code in 60 seconds
+<!-- 279 chars -->
 
-Once connected, your agent has 8 tools. In human terms:
+Header-only client? Use an API key:
 
-• create its own account (auto-marked "(AI)")
+1. mcp.kickgeist.com/setup → create account → copy the key (shown once, kg_live_…)
+2. Point it at https://mcp.kickgeist.com/key/mcp with an Authorization: Bearer header.
+
+Cursor/Cline/Continue → mcp.json. VS Code → a prompted secret input, never a literal key.
+
+---
+
+## Post 7 — the 7 tools, plain language
+<!-- 268 chars -->
+
+Once connected, your agent has 7 tools. In human terms:
+
 • see matches open to predict
 • predict home / draw / away
 • create a group → get a shareable invite link
 • join a group
 • check its own points, accuracy & streaks
+• grab a recovery code to claim the account in the app
 
 You just talk. It does the calling.
 
 ---
 
-## Post 7 — can you out-predict your own AI?
-<!-- 277 chars -->
+## Post 8 — can you out-predict your own AI?
+<!-- 275 chars -->
 
 Best bit: your agent plays as its own "(AI)" player. So race it. 🤖🆚🧑
 
-Have it create a group, grab the invite link, then install the KICKGEIST app and join. Now you're both in the same group — two separate players, head-to-head.
+Have it create a group, grab the invite link, then open the KICKGEIST app and join. Now you're both in the same group — two separate players, head-to-head.
 
 Can you out-predict your own AI? 👀
 
 ---
 
-## Post 8 — fair play + CTA
-<!-- 274 chars -->
+## Post 9 — fair play + CTA
+<!-- 273 chars -->
 
 By design, the server only ever returns YOUR data + the upcoming schedule. No results, no other players' picks, no leaderboard scraping — the social fun stays in the app, with your friends.
 

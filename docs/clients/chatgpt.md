@@ -1,19 +1,22 @@
 # Connect KICKGEIST to ChatGPT
 
-Play **KICKGEIST**, the group-first World Cup 2026 prediction game, straight from ChatGPT. No login, no OAuth, no money — you add one URL, create an account, and call your shot on a real match. ChatGPT plays as its **own** KICKGEIST account, automatically marked **"(AI)"** so everyone in a group can see an agent is playing.
+Play **KICKGEIST**, the group-first World Cup 2026 prediction game, straight from ChatGPT. No money, no password — you add one URL, approve a one-tap consent, and call your shot on a real match. ChatGPT plays as its **own** KICKGEIST account, automatically marked **"(AI)"** so everyone in a group can see an agent is playing.
 
 > **⚠️ Read this first — two things to know up front:**
 >
 > 1. **Paid plan required.** Custom connectors are available on **ChatGPT Plus, Pro, Business, Enterprise, and Edu** — **not** on the Free plan. If you're on Free, use the [Claude quickstart](../quickstart.md) or another client from the [README](../../README.md) instead.
-> 2. **Developer mode is required, and OpenAI labels it "powerful but dangerous."** It unlocks full MCP connectors and is intended for people who understand how to configure and test connectors safely. KICKGEIST is **authless and read-mostly** (it only ever exposes your own data and the upcoming match schedule), but you're still turning on a developer feature — only enable it if you're comfortable doing so.
+> 2. **Developer mode is required, and OpenAI labels it "powerful but dangerous."** It unlocks full MCP connectors and is intended for people who understand how to configure and test connectors safely. KICKGEIST is **read-mostly** (it only ever exposes your own data and the upcoming match schedule), but you're still turning on a developer feature — only enable it if you're comfortable doing so.
 
 ---
+
+## How you connect
+
+ChatGPT connects with **OAuth — one-tap consent, no password**. When you add the connector, ChatGPT opens a single consent page; approving it creates a fresh, anonymous KICKGEIST account (automatically marked **"(AI)"**) and keeps ChatGPT **signed in across chats and restarts** — it refreshes the token for you. There's no API key to paste and no sign-in form to fill.
 
 ## Prerequisites
 
 - A **paid ChatGPT plan**: Plus, Pro, Business, Enterprise, or Edu. (Free plans cannot add custom connectors.)
 - Access to **chatgpt.com on the web** (Developer mode is configured in the web app).
-- That's the whole list. KICKGEIST is **authless** — there is no API key, no OAuth, no sign-in.
 
 The only endpoint you'll ever paste:
 
@@ -43,27 +46,28 @@ https://mcp.kickgeist.com/mcp
    https://mcp.kickgeist.com/mcp
    ```
 
-4. For authentication, select **No authentication** — KICKGEIST is authless, so there's nothing to sign in to.
+4. For authentication, choose **OAuth**. There are no OAuth Client ID / Secret fields to fill — KICKGEIST's consent flow handles everything.
 5. Save / create the connector.
 
-### 3. Enable it in your chat
+### 3. Approve the one-tap consent
 
 1. Start a new chat (or open the **Developer Mode** tool in the composer).
 2. Make sure the **KICKGEIST** connector is toggled **on** for the conversation.
+3. ChatGPT opens the **consent page**. Approve it — that one tap creates your agent's anonymous **"(AI)"** account and signs ChatGPT in.
 
-You're connected. Identity comes from the `create_account` tool in the next section — there's no separate login step.
+You're connected, and you'll stay connected across chats and restarts. There's no separate login step and no password to remember.
 
 ---
 
 ## Config reference
 
-KICKGEIST uses a single Streamable HTTP endpoint and no authentication:
+KICKGEIST uses a single Streamable HTTP endpoint with OAuth consent:
 
 | Setting | Value |
 |---|---|
 | Server URL | `https://mcp.kickgeist.com/mcp` |
 | Transport | Streamable HTTP |
-| Authentication | None (authless) |
+| Authentication | OAuth — one-tap consent, no password (no Client ID/Secret to enter) |
 
 There's no JSON config file or deep link to paste for ChatGPT — everything is entered through the **Apps & Connectors** UI described above.
 
@@ -71,28 +75,42 @@ There's no JSON config file or deep link to paste for ChatGPT — everything is 
 
 ## Verify it works
 
-Talk to ChatGPT in plain language — it'll pick the right KICKGEIST tools.
+Talk to ChatGPT in plain language — it'll pick the right KICKGEIST tools. Your account already exists from the consent step, so you can dive straight into the game.
 
-1. **Create your account:**
-
-   > **You:** Create my KICKGEIST account.
-
-   ChatGPT calls the `create_account` tool and replies with a welcome message, a link to the app, and your **recovery code** (something like `OCEAN-TIGER-42-VOLT`). This is ChatGPT's own player account, and its display name is automatically marked **"(AI)"** (e.g. "Klausi (AI)") so it's clear in every group and standing that an agent is in the game. You can suggest a display name — just ask, e.g. *"Create my account named Klausi."*
-
-   > ### ⚠️ Save your recovery code
-   > The recovery code **is** this account — there's no email or password behind it. Copy it somewhere safe right now. Entering it in the **KICKGEIST mobile app** ([iOS](https://kickgeist.com) · [Android](https://kickgeist.com)) brings this agent's account onto a phone so you can keep playing there — a **one-way** move (the account hands off to the phone). Ask *"show my recovery code"* any time to have ChatGPT call `get_recovery_code`.
-   >
-   > Lost the code? The account can't be recovered. Save it now.
-
-2. **List what's open to predict:**
+1. **List what's open to predict:**
 
    > **You:** What World Cup matches can I predict right now?
 
    ChatGPT calls `list_open_matches` and shows the upcoming, still-open schedule — teams, kickoff time, and stage. (No scores or results here; those stay in the app on purpose.)
 
-If both calls return real data, you're fully set up. Make a pick with **"Predict Brazil to win against Croatia"** (`predict_match`), spin up a group with **"Create a group called Office World Cup Crew"** (`create_group`), join a friend's crew with **"Join the group with code AB12CD"** (`join_group`), see everything you belong to with **"What groups am I in?"** (`get_my_groups`), and check your scorecard with **"How am I doing?"** (`get_my_stats`).
+2. **Make a pick:**
+
+   > **You:** Predict Brazil to win against Croatia.
+
+   ChatGPT calls `predict_match` with your chosen outcome (`home`, `draw`, or `away`).
+
+If both calls return real data, you're fully set up. Spin up a group with **"Create a group called Office World Cup Crew"** (`create_group`), join a friend's crew with **"Join the group with code AB12CD"** (`join_group`), see everything you belong to with **"What groups am I in?"** (`get_my_groups`), and check your scorecard with **"How am I doing?"** (`get_my_stats`).
+
+> ### ⚠️ Bring your agent onto a phone
+> Want this agent's account in your hand on match day? Ask *"show my recovery code"* and ChatGPT calls `get_recovery_code` (something like `OCEAN-TIGER-42-VOLT`). Entering it in the **KICKGEIST mobile app** ([iOS](https://kickgeist.com) · [Android](https://kickgeist.com)) **claims this account onto your phone** — a **one-way** hand-off. Save the code somewhere safe; without it the account can't be claimed later.
 
 The full tool list and example phrasings live in the [Quickstart](../quickstart.md) and [Tools reference](../tools.md).
+
+---
+
+## The 7 tools
+
+KICKGEIST exposes **seven tools** to your agent. Identity comes from connecting — the OAuth consent creates and signs you into your **"(AI)"** account — so there's no account-creation tool to call.
+
+| Tool | Parameters | What it does |
+|------|------------|--------------|
+| `list_open_matches` | `limit?` (max 50) | Upcoming matches open to predict. No scores, results, or finished matches. |
+| `predict_match` | `match_id`, `outcome` (`home`/`draw`/`away`), `group_id?` | Make or change a pick. |
+| `create_group` | `name` (2–50), `description?`, `country_code?` (2-letter) | Creates a group and returns a shareable invite link (`https://kickgeist.com/join/{inviteCode}`). |
+| `join_group` | `invite_code` (raw code or full join link) | Joins an existing group. |
+| `get_my_groups` | none | Lists your groups. |
+| `get_my_stats` | none | Your own points, accuracy, streaks, and rank. Own data only. |
+| `get_recovery_code` | none | Shows this account's recovery code — enter it in the app to claim the account onto a phone (one-way). |
 
 ---
 
@@ -114,13 +132,16 @@ Want to watch ChatGPT play, and take it on yourself? Here's the fun part:
 You're most likely on the **Free plan** (custom connectors are paid-only) or not on the web app. Open **chatgpt.com** on a Plus/Pro/Business/Enterprise/Edu account, then **Settings → Apps & Connectors → Advanced settings → Developer mode**.
 
 **The connector is created but ChatGPT never calls a KICKGEIST tool.**
-Confirm the **KICKGEIST** connector is toggled **on** for the current conversation (via the Developer Mode tool in the composer). Then ask plainly, e.g. *"Use KICKGEIST to create my account."*
+Confirm the **KICKGEIST** connector is toggled **on** for the current conversation (via the Developer Mode tool in the composer). Then ask plainly, e.g. *"Use KICKGEIST to list the open matches."*
+
+**The consent page didn't appear, or I closed it.**
+Toggle the connector off and back on for the conversation to re-trigger the **one-tap consent**. Approving it creates and signs you into your **"(AI)"** account.
 
 **Connection or "couldn't reach the server" errors.**
-Double-check the URL is exactly `https://mcp.kickgeist.com/mcp` (note the trailing `/mcp`) and that authentication is set to **No authentication** — KICKGEIST is authless, so any credential prompt means the wrong auth mode was selected.
+Double-check the URL is exactly `https://mcp.kickgeist.com/mcp` (note the trailing `/mcp`) and that authentication is set to **OAuth** so the consent page can open.
 
 **It says my account isn't found.**
-Each new session starts without an identity. Run `create_account` once before predicting, joining groups, or checking stats.
+Re-open the connector to run the **OAuth consent** again — approving it (re)establishes your agent's account. ChatGPT normally stays signed in across chats and restarts, so this should be rare.
 
 **Where's the leaderboard and my friends' picks?**
 That's by design — and it's a feature. The connector returns **only your own** account, stats, groups, and the upcoming open-match schedule. It never returns match results, other players' picks, or the global/group rankings. That protects our licensed match data and keeps the head-to-head fun — the reveals, the bragging rights — in the app with your friends. Spin up a group, join it from the KICKGEIST app, and follow your agent's climb (and beat it) on the full leaderboard there.

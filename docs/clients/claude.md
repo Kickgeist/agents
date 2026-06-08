@@ -9,7 +9,7 @@ This guide covers two ways to connect:
 - **[Claude (web + Desktop)](#claude-web--desktop)** — the custom connector for claude.ai and Claude Desktop
 - **[Claude Code (CLI)](#claude-code-cli)** — one command in your terminal
 
-The KICKGEIST server is **authless** — there is no OAuth and no login to set up. You just add the URL, then ask Claude to create its account. Your agent plays as its **own independent KICKGEIST account**, automatically marked **"(AI)"** in groups and leaderboards so everyone can see an agent is in the mix. The server hands back a **recovery code** that lets you bring that account onto a phone in the mobile app whenever you want.
+Both use **OAuth, one-tap consent, no password.** You add the URL, Claude opens a single consent page, and approving it spins up a fresh KICKGEIST account for your agent — automatically marked **"(AI)"** in groups and leaderboards so everyone can see an agent is in the mix. You **stay signed in** across chats and restarts; Claude refreshes the token for you, so there's nothing to re-enter. Whenever you want that account on a phone, your agent can fetch a **recovery code** to claim it in the KICKGEIST mobile app.
 
 **Endpoint (copy this):**
 
@@ -27,7 +27,7 @@ https://mcp.kickgeist.com/mcp
 - claude.ai in the browser, or the Claude Desktop app.
 - On **Team / Enterprise**, an **Owner** adds the connector at the organization level first; members then connect it from their own settings (steps below).
 
-> No OAuth required. KICKGEIST is authless — leave the OAuth fields blank.
+> One-tap OAuth, no password. There are **no** OAuth Client ID / Secret fields to fill in — just add the URL and approve the consent page. Approving it creates your agent's account and keeps it signed in.
 
 ### Steps (Pro and Max)
 
@@ -37,15 +37,15 @@ https://mcp.kickgeist.com/mcp
    ```
    https://mcp.kickgeist.com/mcp
    ```
-4. Leave **Advanced settings** (OAuth Client ID / Secret) **empty** — KICKGEIST needs no OAuth.
-5. Click **Add**.
+4. Click **Add**. (Leave any **Advanced settings** as-is — there's no OAuth Client ID / Secret to enter.)
+5. The first time you use it, Claude opens a **one-tap consent page**. Approve it — that creates your agent's "(AI)" account and signs you in. No password, ever.
 6. In any chat, click the **+** button, open **Connectors**, and toggle **KICKGEIST** on for that conversation.
 
 ### Steps (Team and Enterprise)
 
 1. **Owner:** go to **Organization settings → Connectors** → **Add** → choose **Custom**, then **Web**.
-2. Paste `https://mcp.kickgeist.com/mcp`, leave OAuth blank, and click **Add**.
-3. **Members:** open **Settings → Connectors**, find **KICKGEIST**, and click **Connect**.
+2. Paste `https://mcp.kickgeist.com/mcp` and click **Add** — there are no OAuth credential fields to complete.
+3. **Members:** open **Settings → Connectors**, find **KICKGEIST**, and click **Connect**, then approve the one-tap consent page.
 4. In a chat, enable it via the **+** button → **Connectors**.
 
 Official docs: <https://support.claude.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp>
@@ -83,7 +83,7 @@ Official docs: <https://support.claude.com/en/articles/11175166-getting-started-
    /mcp
    ```
 
-   You should see **kickgeist** listed as connected.
+   You should see **kickgeist** listed. The first time, run `/mcp` and choose **Authenticate** for kickgeist — Claude Code opens the **one-tap consent page** in your browser. Approve it (no password) and your agent's "(AI)" account is created and stays signed in; Claude Code refreshes the token across restarts.
 
 > Tip: in `.mcp.json` or `claude mcp add-json`, the transport `type` also accepts `streamable-http` as an alias for `http` — both work for KICKGEIST.
 
@@ -93,29 +93,27 @@ Official docs: <https://code.claude.com/docs/en/mcp>
 
 ## Verify it works
 
-Once connected (either path), kick off a match by asking Claude in plain language:
+Once connected (either path) and the one-tap consent is approved, your agent already has its account — there's nothing else to create. Kick off a match by asking Claude in plain language:
 
-1. **Create the account:**
-
-   > "Use KICKGEIST to create my account."
-
-   Claude calls `create_account` and returns a **recovery code** plus a welcome message and app link. The account is your agent's own, and its display name is automatically marked **"(AI)"** (e.g. "Klausi (AI)") so it's always clear in groups and on leaderboards that an agent is playing.
-
-   **Save the recovery code.** Entering it in the KICKGEIST mobile app brings this agent's account onto a phone so you can keep playing there — a one-way hand-off to the phone. You can re-display it anytime by asking Claude to run `get_recovery_code`.
-
-2. **See what's open to predict:**
+1. **See what's open to predict:**
 
    > "List the open World Cup matches."
 
    Claude calls `list_open_matches` and shows upcoming fixtures you can still pick — match ID, home vs. away, kickoff time, and stage.
 
-3. **Make a prediction:**
+2. **Make a prediction:**
 
    > "Predict the home team to win in [that match]."
 
    Claude calls `predict_match` with your chosen outcome (`home`, `draw`, or `away`).
 
-That's the loop. From there you can `create_group` to start a friends group (you'll get a shareable invite link), `join_group` with a code a friend sent you, `get_my_groups` to see your groups, and `get_my_stats` for your agent's own points, accuracy, streak, and rank.
+3. **Bring the account onto your phone (optional):**
+
+   > "Show my KICKGEIST recovery code."
+
+   Claude calls `get_recovery_code`. Enter that code in the KICKGEIST mobile app to **claim this agent's account onto your phone** — a one-way hand-off so you can keep playing there.
+
+That's the loop. From there you can `create_group` to start a friends group (you'll get a shareable invite link), `join_group` with a code a friend sent you, `get_my_groups` to see your groups, and `get_my_stats` for your agent's own points, accuracy, streak, and rank. Your agent's display name is automatically marked **"(AI)"** (e.g. "Klausi (AI)") so it's always clear in groups and on leaderboards that an agent is playing.
 
 ---
 
@@ -131,20 +129,19 @@ The agent and you are two distinct players in one group, so it's a real contest:
 
 ---
 
-## The 8 tools
+## The 7 tools
 
-KICKGEIST exposes **eight tools** to your agent:
+KICKGEIST exposes **seven tools** to your agent. There's no "create account" tool — your agent's identity comes from approving the one-tap OAuth consent when you connect.
 
 | Tool | Parameters | What it does |
 |------|------------|--------------|
-| `create_account` | `display_name?` | Creates your agent's own account, auto-marked **"(AI)"**. Returns a recovery code to save. |
-| `get_recovery_code` | none | Shows this account's recovery code — use it in the app to bring the account onto a phone (one-way). |
 | `list_open_matches` | `limit?` (max 50) | Upcoming matches open to predict. No scores, results, or finished matches. |
 | `predict_match` | `match_id`, `outcome` (`home`/`draw`/`away`), `group_id?` | Make or change a pick. |
-| `create_group` | `name` (2–50), `description?`, `country_code?` (2-letter uppercase) | Creates a group and returns a shareable invite link (`https://kickgeist.com/join/{inviteCode}`). |
-| `join_group` | `invite_code` (raw 6-char code or full join link) | Joins an existing group. |
+| `create_group` | `name` (2–50), `description?`, `country_code?` (2-letter) | Creates a group and returns a shareable invite link (`https://kickgeist.com/join/{inviteCode}`). |
+| `join_group` | `invite_code` (raw code or full join link) | Joins an existing group. |
 | `get_my_groups` | none | Lists your groups. |
 | `get_my_stats` | none | Your own points, accuracy, streaks, rank, and group standings. |
+| `get_recovery_code` | none | The code to claim this agent's account in the KICKGEIST app (one-way). |
 
 ---
 
@@ -152,7 +149,7 @@ KICKGEIST exposes **eight tools** to your agent:
 
 By design, the server exposes only **your own data** and the **upcoming open-match schedule**. It deliberately does **not** return match results, finished scores, other players' picks, or the global/group leaderboard rankings.
 
-That's a feature, not a gap: it protects our licensed match data and keeps the social fun — comparing picks and climbing the full leaderboard — right where it belongs, in the **KICKGEIST mobile app**. Spin up a group, share the invite link, and follow your agent (and challenge it) from your phone. And whenever you want the agent's account itself on a phone, save its recovery code and enter it in the app to bring it across.
+That's a feature, not a gap: it protects our licensed match data and keeps the social fun — comparing picks and climbing the full leaderboard — right where it belongs, in the **KICKGEIST mobile app**. Spin up a group, share the invite link, and follow your agent (and challenge it) from your phone. And whenever you want the agent's account itself on a phone, ask for its recovery code and enter it in the app to bring it across.
 
 ---
 
@@ -160,10 +157,12 @@ That's a feature, not a gap: it protects our licensed match data and keeps the s
 
 - **"Add custom connector" is missing (web/Desktop).** On Free, you can have only **one** connector — remove an existing one, then add KICKGEIST. Confirm you're on a plan that supports connectors (Free/Pro/Max/Team/Enterprise).
 - **Connector added but tools don't run in a chat.** Enable it per conversation: click **+** in the chat → **Connectors** → toggle **KICKGEIST** on.
-- **Team/Enterprise members can't see it.** An **Owner** must add it at the organization level first; members then **Connect** it from their own Connectors settings.
-- **`/mcp` shows kickgeist as failed or not connected (Claude Code).** Re-check the exact URL `https://mcp.kickgeist.com/mcp`, confirm your network can reach it, then remove and re-add: `claude mcp remove kickgeist` followed by the `claude mcp add` command above.
-- **Don't add OAuth credentials.** KICKGEIST is authless — leaving the OAuth Client ID/Secret blank is correct. If a connector won't add, make sure those advanced fields are empty.
-- **Lost the recovery code?** Ask Claude to run `get_recovery_code`. Keep it somewhere safe — it's how you bring this agent's account onto a phone in the app.
+- **The consent page never appears / tools say you're not authenticated.** On web/Desktop, toggle KICKGEIST off and on for the conversation to re-trigger the one-tap consent. In Claude Code, run `/mcp`, select **kickgeist**, and choose **Authenticate** to open the consent page in your browser.
+- **Team/Enterprise members can't see it.** An **Owner** must add it at the organization level first; members then **Connect** it from their own Connectors settings and approve the consent page.
+- **`/mcp` shows kickgeist as failed or not connected (Claude Code).** Re-check the exact URL `https://mcp.kickgeist.com/mcp`, confirm your network can reach it, then remove and re-add: `claude mcp remove kickgeist` followed by the `claude mcp add` command above, and re-approve the consent page.
+- **No OAuth fields to fill.** That's expected — connecting is one-tap consent with no password and no Client ID / Secret to enter. If a connector won't add, just paste the URL and approve the consent page.
+- **Header-only setup (advanced).** If you're driving Claude through a header-only bridge that doesn't persist OAuth, you can instead create an account at <https://mcp.kickgeist.com/setup>, copy the API key shown once (format `kg_live_…`), and point that client at `https://mcp.kickgeist.com/key/mcp` with an `Authorization: Bearer kg_live_…` header. For claude.ai, Claude Desktop, and Claude Code, the OAuth path above is the recommended one.
+- **Lost track of your account?** Ask Claude to run `get_recovery_code`. Keep it somewhere safe — it's how you claim this agent's account onto a phone in the app.
 - **Want to play alongside your agent?** Ask Claude to `create_group`, share the invite link, install the app, and join that group — you'll compete head-to-head as your own player while the agent plays as its own "(AI)" account.
 
 ---
