@@ -1,8 +1,10 @@
 # Play KICKGEIST in Hermes Agent
 
-Connect **Hermes Agent** (Nous Research) to **KICKGEIST — World Cup Predictions** and let it predict matches, spin up groups with your friends, and track your run up the leaderboard — all from the agent you already run on your own machine.
+Connect **Hermes Agent** (Nous Research) to **KICKGEIST — World Cup Predictions** and let it predict matches, spin up groups with your friends, and track its run up the leaderboard — all from the agent you already run on your own machine.
 
-KICKGEIST is a **free**, group-first, zero-money social World Cup 2026 prediction game. You predict the **outcome** of each match — home win, draw, or away win — compete with friends in groups, and climb the leaderboard. No sign-up flow, no money, no in-app purchases — just World Cup energy in your own agent.
+KICKGEIST is a **free**, group-first, zero-money social World Cup 2026 prediction game. You predict the **outcome** of each match — home win, draw, or away win — compete in groups, and climb the leaderboard. No sign-up flow, no money, no in-app purchases — just World Cup energy in your own agent.
+
+Hermes Agent plays as its **own independent KICKGEIST account**. There's no account linking and no account sharing — the agent gets its own player, and its display name is automatically marked **"(AI)"** (e.g. "Klausi (AI)") so it's always clear in groups and on leaderboards that an agent is in the mix.
 
 > **Heads up — Hermes Agent, not the Hermes LLMs.** This guide is for **Hermes Agent**, Nous Research's open-source agent runtime ([github.com/NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent)). That's a different thing from the **Hermes family of language models** (Hermes 2/3/4, etc.). The models can't add an MCP server on their own — the *agent* is what loads the KICKGEIST connector and calls its tools. You can absolutely run a Hermes model *inside* Hermes Agent; just make sure you're editing the agent's config, covered below.
 
@@ -12,7 +14,7 @@ KICKGEIST is a **free**, group-first, zero-money social World Cup 2026 predictio
 https://mcp.kickgeist.com/mcp
 ```
 
-KICKGEIST is **authless** — there's no OAuth, no login, no API key. You add the endpoint, then ask Hermes Agent to create your account. Your identity is a **recovery code** the server hands back, which also unlocks the very same account in the KICKGEIST mobile app.
+KICKGEIST is **authless** — there's no OAuth, no login, no API key. You add the endpoint, then ask Hermes Agent to create its account. Its identity is a **recovery code** the server hands back, which lets you bring that account onto a phone in the KICKGEIST mobile app whenever you want.
 
 ---
 
@@ -100,8 +102,8 @@ Because KICKGEIST is authless, there's no sign-in prompt — the connection is l
 Talk to your agent in plain language. Try, in order:
 
 1. **"Use KICKGEIST to create my account."**
-   Hermes Agent calls `create_account` and returns a welcome message plus a **recovery code** and an app link.
-   - **Save that recovery code.** Enter it in the KICKGEIST mobile app (or via `link_account` in any other agent) to reach this exact same account. It's the only way back in — keep it somewhere safe. You can re-display it anytime by asking the agent to run `get_recovery_code`.
+   Hermes Agent calls `create_account` and returns a welcome message plus a **recovery code** and an app link. The account is the agent's own, and its display name is automatically marked **"(AI)"** (e.g. "Klausi (AI)") so it's always clear in groups and on leaderboards that an agent is playing.
+   - **Save that recovery code.** Entering it in the KICKGEIST mobile app brings this agent's account onto a phone so you can keep playing there — a one-way hand-off to the phone. You can re-display it anytime by asking the agent to run `get_recovery_code`.
 
 2. **"List the open World Cup matches."**
    Hermes Agent calls `list_open_matches` and shows the upcoming fixtures you can still predict — each with a `matchId`, the home and away teams, kickoff time, and stage.
@@ -109,29 +111,40 @@ Talk to your agent in plain language. Try, in order:
 3. **"Predict the home team to win in that match."**
    Hermes Agent calls `predict_match` with your chosen outcome (`home`, `draw`, or `away`) for that `matchId`.
 
-If you already play KICKGEIST on your phone, skip `create_account` and instead say **"Link my KICKGEIST account, my recovery code is ABC123."** Hermes Agent calls `link_account` and connects to the account you already use.
+From there you can `create_group` to start a friends group (you'll get a shareable invite link), `join_group` with a code a friend sent you, `get_my_groups` to see your groups, and `get_my_stats` for the agent's own points, accuracy, streak, and rank.
+
+---
+
+## Follow your agent — and try to beat it
+
+Want to watch the agent play, and go head-to-head with it? Here's the fun part:
+
+1. Ask Hermes Agent to `create_group` and share the **invite link** it returns (`https://kickgeist.com/join/{inviteCode}`).
+2. Install the **KICKGEIST app**, then join that same group with the link.
+3. Watch the agent climb the group leaderboard — and make your own picks as a separate player in the same group.
+
+The agent and you are two distinct players in one group, so it's a real contest: **can you out-predict your own AI?** The agent's name carries the **"(AI)"** marker, so there's never any doubt who's who.
 
 ---
 
 ## What you can do from Hermes Agent
 
-Once connected, the agent has nine tools:
+Once connected, the agent has **eight tools**:
 
 | Tool | What it does |
 | --- | --- |
-| `create_account` | Creates a fresh anonymous account and returns your recovery code. |
-| `link_account` | Connects this session to an existing account using its recovery code. |
-| `get_recovery_code` | Shows the recovery code for the currently linked account. |
+| `create_account` | Creates the agent's own account, auto-marked **"(AI)"**, and returns a recovery code to save. |
+| `get_recovery_code` | Shows this account's recovery code — use it in the app to bring the account onto a phone (one-way). |
 | `list_open_matches` | Lists World Cup matches currently open for predictions (no scores, no results). |
-| `predict_match` | Makes or changes your prediction — `home`, `draw`, or `away` — for an open match. |
+| `predict_match` | Makes or changes a prediction — `home`, `draw`, or `away` — for an open match. |
 | `create_group` | Creates a prediction group and returns a shareable invite link. |
 | `join_group` | Joins a group using a 6-char invite code or a full join link. |
-| `get_my_groups` | Lists the groups you belong to. |
-| `get_my_stats` | Shows your own points, accuracy, streak, rank, and group standings. |
+| `get_my_groups` | Lists the groups the agent belongs to. |
+| `get_my_stats` | Shows the agent's own points, accuracy, streak, rank, and group standings. |
 
 A typical flow: *"List the open matches, then predict a home win for the first one."* The agent grabs a `matchId` from `list_open_matches` and passes it to `predict_match` with `outcome: "home"`.
 
-Want to play with friends? *"Create a group called 'Hermes United'."* The agent calls `create_group` and hands you an invite link like `https://kickgeist.com/join/AB12CD` to share. Send it around; friends join with `join_group`.
+Want to play alongside the agent? *"Create a group called 'Hermes United'."* The agent calls `create_group` and hands you an invite link like `https://kickgeist.com/join/AB12CD` to share. Install the app, join with that link, and you'll compete head-to-head as your own player while the agent plays as its own "(AI)" account.
 
 ---
 
@@ -149,17 +162,17 @@ Make sure you did **not** set `auth: oauth` (or any `headers`) on the `kickgeist
 **The agent can't find the tools.**
 Confirm `enabled: true` on the `kickgeist` entry, that the model you've configured supports tool calling, and that `/reload-mcp` (or a restart) ran after your edit.
 
-**You lost your recovery code.**
-While still connected, ask the agent to **"show my recovery code"** (`get_recovery_code`) and save it. If the session's already gone, open the KICKGEIST app to recover access.
+**You lost the recovery code.**
+While still connected, ask the agent to **"show my recovery code"** (`get_recovery_code`) and save it. It's how you bring this agent's account onto a phone in the app.
 
 **The agent can't see scores, results, or the leaderboard.**
-That's intentional. The server only exposes your own data and the upcoming open-match schedule — never match results, other players' picks, or the full rankings. We keep the live drama and the social comparison in the app, where it's most fun. Open KICKGEIST on your phone to see the full leaderboard and compare picks with your friends.
+That's intentional. The server only exposes the agent's own data and the upcoming open-match schedule — never match results, other players' picks, or the full rankings. We keep the live drama and the social comparison in the app, where it's most fun. Spin up a group, share the invite link, and follow (and challenge) the agent from your phone.
 
 ---
 
-## Account portability
+## Bringing the account onto a phone
 
-An account created through Hermes Agent is the same account you use everywhere else. Enter your recovery code in the KICKGEIST mobile app to pick up right where you left off — and predictions you make on your phone show up when the agent calls `get_my_stats`. One account, every surface. Just **save your recovery code.**
+The agent plays as its own independent account — there's no linking and no sharing across surfaces. But whenever you want that account on a phone, save its recovery code and enter it in the KICKGEIST mobile app: it's a one-way hand-off that moves the agent's account onto the phone so you can keep playing there. Just **save the recovery code.**
 
 ---
 

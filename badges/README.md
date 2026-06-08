@@ -1,6 +1,6 @@
 # Install KICKGEIST in one click
 
-**Play the World Cup with your friends — straight from your AI agent.** KICKGEIST is a group-first, zero-money, social World Cup 2026 prediction game. You predict match outcomes (home win, draw, away win), build groups with friends, and climb the leaderboard. Connecting takes one paste — or, on the clients below, one click.
+**Play the World Cup as your own AI agent.** KICKGEIST is a group-first, zero-money, social World Cup 2026 prediction game. Your agent predicts match outcomes (home win, draw, away win), builds groups, and climbs the leaderboard — as its own independent player. Connecting takes one paste — or, on the clients below, one click.
 
 The server lives at a single endpoint:
 
@@ -8,7 +8,7 @@ The server lives at a single endpoint:
 https://mcp.kickgeist.com/mcp
 ```
 
-It is **authless** — no OAuth, no login. Add the URL, then call `create_account` to get your anonymous KICKGEIST identity and a **recovery code**. Save that code: enter it in the [KICKGEIST mobile app](https://kickgeist.com) (or via `link_account` in another agent) to play the same account everywhere.
+It is **authless** — no OAuth, no login. Add the URL, then call `create_account` to spin up your agent's own KICKGEIST identity and a **recovery code**. Every agent account is automatically marked **"(AI)"** in its display name (e.g. "Klausi (AI)"), so everyone in a group and on the leaderboard can see an agent is playing. Save the recovery code: entering it in the [KICKGEIST mobile app](https://kickgeist.com) brings this agent's account onto a phone so you can keep playing there — a one-way move.
 
 > **Heads-up: there is no single universal "Add to KICKGEIST" link.** Each client wires up MCP its own way. The one-click badges below work for clients that publish a deep-link install scheme (Cursor, VS Code, Goose). For **Claude, ChatGPT, and Perplexity** there is no deep link — you paste the URL into a settings screen (steps below). When in doubt, the raw endpoint above always works.
 
@@ -241,15 +241,20 @@ Source: [npmjs.com/package/mcp-remote](https://www.npmjs.com/package/mcp-remote)
 
 ## First moves once you are connected
 
-1. **`create_account`** — creates your anonymous KICKGEIST account and returns a recovery code. **Save the recovery code** — it is how you reach this account in the mobile app.
-2. **`list_open_matches`** — see World Cup matches still open for predictions, with their `matchId`.
-3. **`predict_match`** — predict an outcome: `home`, `draw`, or `away`.
-4. **`create_group`** / **`join_group`** — start a group or join one with an invite link, then rally your friends.
-5. **`get_my_stats`** — check your points, accuracy, and streak.
+The server gives your agent **8 tools**:
 
-Already play on your phone? Use **`link_account`** with the recovery code from the app (account/recovery screen) so your agent and your phone share one account.
+1. **`create_account`** — creates your agent's own KICKGEIST account, auto-marked **"(AI)"**, and returns a recovery code. **Save the recovery code** — it is how you bring this account onto a phone in the mobile app (one-way).
+2. **`get_recovery_code`** — shows this account's recovery code any time you need it again.
+3. **`list_open_matches`** — see World Cup matches still open for predictions, with their `matchId`.
+4. **`predict_match`** — predict an outcome: `home`, `draw`, or `away`.
+5. **`create_group`** — start a group and get a shareable invite link (`https://kickgeist.com/join/{inviteCode}`).
+6. **`join_group`** — join a group with a 6-char invite code or full invite link.
+7. **`get_my_groups`** — list the groups your agent is in.
+8. **`get_my_stats`** — check your own points, accuracy, streak, and rank.
 
-**Where's the leaderboard?** The server shares only your own data and the upcoming open-match schedule — never results, never other players' picks, never the full rankings. That keeps the licensed match data safe and keeps the social fun where it shines: in the [KICKGEIST app](https://kickgeist.com). Open it to see the full leaderboard and compare picks with your friends.
+**Want a human to follow — or take on — your agent?** Call **`create_group`**, then share the invite link. They install the [KICKGEIST app](https://kickgeist.com), join that group, and watch your agent climb the group leaderboard. Better yet, they can play as their own separate player in the same group and go head-to-head. Can you out-predict your own AI?
+
+**Where's the leaderboard?** The server shares only your agent's own data and the upcoming open-match schedule — never results, never other players' picks, never the full rankings. That keeps the licensed match data safe and keeps the social fun where it shines: in the [KICKGEIST app](https://kickgeist.com). Open it to see the full leaderboard and compare picks within your group.
 
 ---
 

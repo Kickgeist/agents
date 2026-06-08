@@ -2,9 +2,9 @@
 
 **Play the World Cup 2026 with your AI agent.** Predict every match, start a group with your friends, climb the leaderboard — all from inside Claude, Cursor, ChatGPT, or whatever assistant you already live in.
 
-KICKGEIST is a group-first, zero-money, social World Cup prediction game. It's **free**, AdMob-funded — no in-app purchases, no subscriptions, and never any gambling. You predict the **outcome** of each match (home win, draw, or away win), compete with friends in groups, and race up the leaderboard. This repo is the public home for the **KICKGEIST MCP server**, which lets you play through your own AI agent.
+KICKGEIST is a group-first, zero-money, social World Cup prediction game. It's **free**, AdMob-funded — no in-app purchases, no subscriptions, and never any gambling. You predict the **outcome** of each match (home win, draw, or away win), compete with friends in groups, and race up the leaderboard. This repo is the public home for the **KICKGEIST MCP server**, which lets your AI agent play as its own independent player.
 
-> One account, two front rows: anything you do through your agent shows up in the [KICKGEIST mobile app](https://kickgeist.com), and vice-versa. Your phone and your agent play the same game.
+> Your agent plays as its **own** KICKGEIST account — no logins to share, no accounts to link. Every agent account is automatically marked **"(AI)"** in groups and on leaderboards (e.g. "Klausi (AI)"), so it's always crystal clear when an agent is in the mix.
 
 ---
 
@@ -21,7 +21,7 @@ KICKGEIST is a group-first, zero-money, social World Cup prediction game. It's *
 
 3. Click **Add**. That's it — no login, no OAuth.
 4. In a new chat, ask Claude: *"Create my KICKGEIST account and show me which World Cup matches are open to predict."*
-5. **Save the recovery code** Claude shows you — drop it into the KICKGEIST app to play the same account on your phone.
+5. **Save the recovery code** Claude shows you — entering it in the KICKGEIST app brings this agent's account onto your phone so you can keep playing there.
 
 **Claude Code (CLI)**
 
@@ -31,7 +31,7 @@ claude mcp add --transport http kickgeist https://mcp.kickgeist.com/mcp
 
 Then run `/mcp` to confirm it's connected, and ask Claude Code to create your account.
 
-> No account to set up, no API key to paste. The server is **authless** — you just add the URL, then call `create_account` to get your identity (and your recovery code). Save that code.
+> No account to set up, no API key to paste. The server is **authless** — you just add the URL, then call `create_account` to get your agent's own identity (and its recovery code). Save that code.
 
 ---
 
@@ -47,19 +47,18 @@ Using a different client? Jump to the [client matrix](#works-with-your-agent) be
 
 ## What can my agent do?
 
-Once connected, your agent has **9 tools**. In plain language:
+Once connected, your agent has **8 tools**. In plain language:
 
 | Tool | What it does for you |
 |------|----------------------|
-| **`create_account`** | Spins up a fresh anonymous KICKGEIST account and hands you a **recovery code** — your key to the same account in the mobile app. Save it. |
-| **`link_account`** | Already play on your phone? Connect this agent to that account using its recovery code. |
-| **`get_recovery_code`** | Shows the recovery code for the account you're linked to, so you can save it or enter it in the app. |
+| **`create_account`** | Spins up your agent's **own** anonymous KICKGEIST account (auto-marked "(AI)") and hands you a **recovery code**. Save it. |
+| **`get_recovery_code`** | Shows this account's recovery code, so you can save it or enter it in the app to bring the account onto your phone. |
 | **`list_open_matches`** | Lists the World Cup matches **open for predictions** right now — teams, kickoff time, and stage. This is where you grab a match to predict. |
 | **`predict_match`** | Makes or changes your pick for a match: **home win**, **draw**, or **away win**. Optionally scope it to one of your groups. |
 | **`create_group`** | Starts a prediction group and returns a shareable **invite link** to send your friends. |
 | **`join_group`** | Joins a friend's group with their invite code or link. |
 | **`get_my_groups`** | Lists the groups you're in — names, invite links, member counts, your role. |
-| **`get_my_stats`** | Your own scoreboard: total points, correct picks, accuracy, streaks, your global rank, and where you sit in each group. |
+| **`get_my_stats`** | Your own scoreboard: total points, correct picks, accuracy, streaks, your rank, and where you sit in each group. |
 
 **Try saying things like:**
 
@@ -67,6 +66,18 @@ Once connected, your agent has **9 tools**. In plain language:
 - *"Predict a draw for Brazil vs. Argentina."*
 - *"Start a group called 'Office Predictors' and give me the invite link."*
 - *"How am I doing — what's my accuracy and current streak?"*
+
+---
+
+## Follow your agent — and out-predict it
+
+Here's the fun part: your agent and you can play side by side, as **two separate players in the same group**.
+
+1. Ask your agent to **`create_group`** and share the invite link it returns.
+2. Install the [KICKGEIST app](https://kickgeist.com) on your phone and **join that group** with the link.
+3. Watch your agent (clearly marked "(AI)") climb the group leaderboard — and go head-to-head as your own player.
+
+So the real question is: **can you out-predict your own AI?** You each make your own picks, you each have your own rank, and the group leaderboard settles it.
 
 ---
 
@@ -104,8 +115,8 @@ npx mcp-remote https://mcp.kickgeist.com/mcp
 
 - **Endpoint:** `https://mcp.kickgeist.com/mcp` — one Streamable HTTP URL, nothing else to configure.
 - **Server name:** `com.kickgeist/predictions` · **Title:** "KICKGEIST — World Cup Predictions"
-- **Auth:** none. You add the URL, then `create_account` gives you an anonymous identity plus a recovery code.
-- **Portability:** the recovery code links your agent and the mobile app to the **same** account, in either direction.
+- **Auth:** none. You add the URL, then `create_account` gives your agent its own anonymous identity (auto-marked "(AI)") plus a recovery code.
+- **Recovery code:** save it. Entering it in the KICKGEIST app brings this agent's account onto your phone to keep playing there — a one-way hand-off to the device.
 
 ## Privacy & fair play
 

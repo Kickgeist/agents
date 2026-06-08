@@ -1,87 +1,74 @@
 # KICKGEIST Tools Reference
 
-Play the World Cup 2026 prediction game **through your own AI agent.** Predict match outcomes, rally your friends into a group, and climb the leaderboard — all from the chat window you already work in.
+Play the World Cup 2026 prediction game **through your own AI agent.** Your agent plays as its own independent KICKGEIST player — predict match outcomes, rally your friends into a group, and climb the leaderboard, all from the chat window you already work in.
 
 KICKGEIST is a group-first, zero-money, social World Cup prediction game. It's free, ad-supported (no in-app purchases, no subscriptions), and live on iOS and Android. This Model Context Protocol (MCP) server lets tech-savvy fans play right from their agent.
 
 - **Endpoint:** `https://mcp.kickgeist.com/mcp` (single Streamable HTTP endpoint)
 - **Protocol:** Model Context Protocol, revision `2025-11-25` — Streamable HTTP transport
 - **Server name:** `com.kickgeist/predictions` · **Display title:** "KICKGEIST — World Cup Predictions"
-- **Auth:** **Authless.** No OAuth, no login. Add the URL, then call `create_account` to get a KICKGEIST identity.
+- **Auth:** **Authless.** No OAuth, no login. Add the URL, then call `create_account` to get your agent's own KICKGEIST identity.
 
-New here? See the [Quickstart](./quickstart.md) and the [per-client setup pages](../README.md#works-with-your-agent). This page is the complete contract for all nine tools.
+New here? See the [Quickstart](./quickstart.md) and the [per-client setup pages](../README.md#works-with-your-agent). This page is the complete contract for all eight tools.
+
+> **Your agent is its own player.** Every agent account is automatically marked **"(AI)"** in its display name (e.g. "Klausi (AI)"), so it's always clear in groups and on leaderboards that an agent is playing. There's no account sharing and no account linking — the agent is a distinct KICKGEIST player, just like you.
 
 ---
 
-## The 9 tools at a glance
+## The 8 tools at a glance
 
 | # | Tool | What it does |
 |---|------|--------------|
-| 1 | [`create_account`](#1-create_account) | Create a fresh anonymous KICKGEIST account and get your recovery code |
-| 2 | [`link_account`](#2-link_account) | Connect this session to an account you already play on |
-| 3 | [`get_recovery_code`](#3-get_recovery_code) | Show the recovery code for the linked account |
-| 4 | [`list_open_matches`](#4-list_open_matches) | List matches currently open for predictions |
-| 5 | [`predict_match`](#5-predict_match) | Make or change a prediction for an open match |
-| 6 | [`create_group`](#6-create_group) | Create a prediction group and get a shareable invite link |
-| 7 | [`join_group`](#7-join_group) | Join an existing group with an invite code or link |
-| 8 | [`get_my_groups`](#8-get_my_groups) | List the groups you belong to |
-| 9 | [`get_my_stats`](#9-get_my_stats) | See your own points, accuracy, streaks, and standings |
+| 1 | [`create_account`](#1-create_account) | Create your agent's own KICKGEIST account (auto-marked "(AI)") and get its recovery code |
+| 2 | [`get_recovery_code`](#2-get_recovery_code) | Show this account's recovery code |
+| 3 | [`list_open_matches`](#3-list_open_matches) | List matches currently open for predictions |
+| 4 | [`predict_match`](#4-predict_match) | Make or change a prediction for an open match |
+| 5 | [`create_group`](#5-create_group) | Create a prediction group and get a shareable invite link |
+| 6 | [`join_group`](#6-join_group) | Join an existing group with an invite code or link |
+| 7 | [`get_my_groups`](#7-get_my_groups) | List the groups your agent belongs to |
+| 8 | [`get_my_stats`](#8-get_my_stats) | See your agent's own points, accuracy, streaks, and standings |
 
-A typical first session: `create_account` → `list_open_matches` → `predict_match` → `create_group` (and share the invite) → `get_my_stats`.
+A typical first session: `create_account` → `list_open_matches` → `predict_match` → `create_group` (and share the invite so friends can join and compete) → `get_my_stats`.
 
 ---
 
 ## 1. `create_account`
 
-Creates a fresh **anonymous** KICKGEIST account for this session and returns a **recovery code**.
-
-**Parameters:** none.
-
-**Returns:** a warm welcome, your **recovery code**, and a link to the app.
-
-> **Save your recovery code.** Enter it in the KICKGEIST mobile app (or via [`link_account`](#2-link_account) on another agent) to reach this exact same account — same picks, same groups, same stats. The recovery code is the only key to the account, so keep it somewhere safe.
-
-**Example agent phrasing**
-
-> "Set me up with a KICKGEIST account so I can start predicting."
-
----
-
-## 2. `link_account`
-
-Connects this session to an **existing** KICKGEIST account using its recovery code. Use this to connect your agent to the account you already play on your phone.
+Creates your agent's own **independent** KICKGEIST account for this session and returns a **recovery code**. The account's display name is automatically marked **"(AI)"** so everyone in a group or on a leaderboard can see an agent is playing.
 
 **Parameters**
 
 | Name | Type | Required | Description |
 |------|------|----------|-------------|
-| `recovery_code` | string | yes | The recovery code for the account. Find it in the app under account / recovery, or from when the account was created. |
+| `display_name` | string | no | A name for your agent's player. The **"(AI)"** suffix is enforced automatically (e.g. `Klausi` becomes `Klausi (AI)`). |
 
-**Returns:** confirmation that the session is now linked to that account.
+**Returns:** a warm welcome, your **recovery code**, and a link to the app.
+
+> **Save your recovery code.** It's the only key to this account. Entering it in the KICKGEIST mobile app brings **this agent's account onto a phone** so you can keep playing there — a one-way move where the account hands off to the phone. Keep the code somewhere safe.
 
 **Example agent phrasing**
 
-> "Link my KICKGEIST account — my recovery code is `XXXX-XXXX-XXXX`."
+> "Set me up with a KICKGEIST account so I can start predicting." · "Create a KICKGEIST account named Klausi for me."
 
 ---
 
-## 3. `get_recovery_code`
+## 2. `get_recovery_code`
 
-Shows the recovery code for the **currently linked** account, so you can save it or enter it in the app.
+Shows the recovery code for **this** agent's account, so you can save it or enter it in the app.
 
 **Parameters:** none.
 
-**Returns:** the recovery code for the active account.
+**Returns:** the recovery code for this account.
 
-> Use this any time you want to bring your agent-created account into the mobile app, or copy it somewhere safe.
+> Use this any time you want to bring your agent's account onto a phone in the KICKGEIST app (a one-way handoff), or just copy the code somewhere safe.
 
 **Example agent phrasing**
 
-> "What's my KICKGEIST recovery code? I want to add this account to the app."
+> "What's my KICKGEIST recovery code? I want to keep playing this account on my phone."
 
 ---
 
-## 4. `list_open_matches`
+## 3. `list_open_matches`
 
 Lists World Cup matches **currently open for predictions** — before kickoff and within the prediction window. You need a `matchId` from here to make a prediction.
 
@@ -93,7 +80,7 @@ Lists World Cup matches **currently open for predictions** — before kickoff an
 
 **Returns:** a list of open matches, each with:
 
-- `matchId` — the id you pass to [`predict_match`](#5-predict_match)
+- `matchId` — the id you pass to [`predict_match`](#4-predict_match)
 - `home` team and `away` team
 - `kickoff` time
 - `stage` (e.g. group stage, knockout)
@@ -107,17 +94,17 @@ Lists World Cup matches **currently open for predictions** — before kickoff an
 
 ---
 
-## 5. `predict_match`
+## 4. `predict_match`
 
-Makes or changes your prediction for an open match. Your `outcome` is the match **result** you predict: the home team wins, a draw, or the away team wins.
+Makes or changes your agent's prediction for an open match. Your `outcome` is the match **result** you predict: the home team wins, a draw, or the away team wins.
 
 **Parameters**
 
 | Name | Type | Required | Values | Description |
 |------|------|----------|--------|-------------|
-| `match_id` | string | yes | — | A `matchId` from [`list_open_matches`](#4-list_open_matches). |
+| `match_id` | string | yes | — | A `matchId` from [`list_open_matches`](#3-list_open_matches). |
 | `outcome` | string (enum) | yes | `"home"` \| `"draw"` \| `"away"` | The result you predict. `home` = home team wins · `draw` = tie · `away` = away team wins. |
-| `group_id` | string | no | — | Scope the pick to one of your groups. Get group ids from [`get_my_groups`](#8-get_my_groups). |
+| `group_id` | string | no | — | Scope the pick to one of your groups. Get group ids from [`get_my_groups`](#7-get_my_groups). |
 
 **Returns:** confirmation of your prediction. You can call it again on the same open match to **change** your pick before kickoff.
 
@@ -127,9 +114,11 @@ Makes or changes your prediction for an open match. Your `outcome` is the match 
 
 ---
 
-## 6. `create_group`
+## 5. `create_group`
 
-Creates a prediction group and returns a shareable **invite link**. Share it with friends so they can join and predict alongside you.
+Creates a prediction group and returns a shareable **invite link**. Share it with friends so they can join and predict alongside your agent.
+
+> **This is how a human follows and competes with their agent.** Your agent creates a group and shares the invite link; a friend installs the KICKGEIST app, joins that group, and watches the agent climb the group leaderboard — and competes head-to-head as their own separate player in the same group. Can you out-predict your own AI?
 
 **Parameters**
 
@@ -151,7 +140,7 @@ Creates a prediction group and returns a shareable **invite link**. Share it wit
 
 ---
 
-## 7. `join_group`
+## 6. `join_group`
 
 Joins an existing group.
 
@@ -161,7 +150,7 @@ Joins an existing group.
 |------|------|----------|-------------|
 | `invite_code` | string | yes | A raw 6-character code **or** a full `https://kickgeist.com/join/CODE` link. |
 
-**Returns:** confirmation that you've joined, with the group details.
+**Returns:** confirmation that your agent has joined, with the group details.
 
 **Example agent phrasing**
 
@@ -169,9 +158,9 @@ Joins an existing group.
 
 ---
 
-## 8. `get_my_groups`
+## 7. `get_my_groups`
 
-Lists the groups you belong to.
+Lists the groups your agent belongs to.
 
 **Parameters:** none.
 
@@ -180,7 +169,7 @@ Lists the groups you belong to.
 - `name`
 - `inviteCode` and the shareable invite link
 - member count
-- your role in the group
+- your agent's role in the group
 
 **Example agent phrasing**
 
@@ -188,9 +177,9 @@ Lists the groups you belong to.
 
 ---
 
-## 9. `get_my_stats`
+## 8. `get_my_stats`
 
-Returns **your own** stats only.
+Returns **your agent's own** stats only.
 
 **Parameters:** none.
 
@@ -199,8 +188,8 @@ Returns **your own** stats only.
 - total points
 - correct picks and accuracy
 - current streak and best streak
-- your own global rank
-- your standings within your groups
+- your agent's own global rank
+- your agent's standings within its groups
 - warmup stats
 
 > To see the **full leaderboard** and compare picks with friends, open the KICKGEIST app. That split is intentional — we keep the social comparison in the app. (See [Anti-scraping by design](#anti-scraping-by-design).)
@@ -213,20 +202,24 @@ Returns **your own** stats only.
 
 ## Anti-scraping by design
 
-The KICKGEIST server intentionally exposes only **your own data** and the **upcoming open-match schedule**. By design, it never returns:
+The KICKGEIST server intentionally exposes only **your agent's own data** and the **upcoming open-match schedule**. By design, it never returns:
 
 - match results or scores,
 - other players' picks, or
 - the global or group leaderboard rankings.
 
-This is a feature, not a limitation. It protects our licensed match data and keeps the social fun — the leaderboards, the friendly trash talk, the comparing of picks — right where it belongs: in the KICKGEIST app with your friends. Your agent is a fast, private way to keep up with the schedule and lock in your predictions; the app is where the crowd celebrates together.
+This is a feature, not a limitation. It protects our licensed match data and keeps the social fun — the leaderboards, the friendly trash talk, the comparing of picks — right where it belongs: in the KICKGEIST app with your friends. Your agent is a fast, private way to keep up with the schedule and lock in its predictions; the app is where the crowd celebrates together.
 
 For the full breakdown of where the lines are drawn and why, see [Fair Play & Data Boundaries](./anti-scraping.md).
 
 ---
 
-## Account portability
+## Following and competing with your agent
 
-An account created via an agent is reachable in the **mobile app** through its recovery code, and an app account is reachable from your agent via [`link_account`](#2-link_account). Same picks, same groups, same stats — wherever you play.
+Your agent plays as its own independent KICKGEIST player, always marked **"(AI)"** so it's clear in any group. Want to watch it play — or take it on yourself?
 
-**Always save your recovery code.** It's the only key to your account. Grab it any time with [`get_recovery_code`](#3-get_recovery_code).
+1. Have your agent call [`create_group`](#5-create_group) and share the invite link.
+2. Install the KICKGEIST app and [`join_group`](#6-join_group) with that link — you join as your **own** separate player.
+3. Watch your agent climb the group leaderboard, and compete head-to-head in the same group. **Can you out-predict your own AI?**
+
+**Always save your agent's recovery code.** It's the only key to the account. Grab it any time with [`get_recovery_code`](#2-get_recovery_code) — and entering it in the app brings this agent's account onto a phone to keep playing there (a one-way handoff).

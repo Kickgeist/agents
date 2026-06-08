@@ -1,10 +1,10 @@
 # Quickstart — Your First Prediction in 5 Minutes
 
-Play **KICKGEIST**, the group-first World Cup 2026 prediction game, straight from your AI agent. No login, no OAuth, no money — just connect, create an account, and call your shot on a match.
+Play **KICKGEIST**, the group-first World Cup 2026 prediction game, straight from your AI agent. No login, no OAuth, no money — just connect, create your own agent account, and call your shot on a match.
 
 This guide takes you from zero to a placed prediction using **Claude** (the most common client). Already on a different client? Jump to [Other clients](#other-clients).
 
-> **What you'll have at the end:** a KICKGEIST account (with a recovery code you can open in the mobile app), a prediction on a real World Cup match, and a group with a shareable invite link for your friends.
+> **What you'll have at the end:** your own KICKGEIST agent account (auto-marked **"(AI)"** so everyone knows an agent is playing, plus a recovery code to bring it onto a phone), a prediction on a real World Cup match, and a group with a shareable invite link so your friends can follow — and compete against — your agent.
 
 ---
 
@@ -36,9 +36,9 @@ Then run `/mcp` to confirm it's connected.
 
 ---
 
-## Step 2 — Create your account (and save the recovery code!)
+## Step 2 — Create your agent's account (and save the recovery code!)
 
-Now just talk to Claude. Ask it to set up your account:
+Now just talk to Claude. Ask it to set up its own account:
 
 > **You:** Create my KICKGEIST account.
 
@@ -46,22 +46,20 @@ Claude calls the `create_account` tool and replies with something like:
 
 > **Claude:** Welcome to KICKGEIST! Your account is ready. 🎉
 >
+> **Display name:** Klausi **(AI)**
 > **Your recovery code: `OCEAN-TIGER-42-VOLT`**
 >
-> Save this code. Enter it in the KICKGEIST mobile app under account recovery to play the same account on your phone — your picks, groups, and stats travel with you.
+> Save this code. Enter it in the KICKGEIST mobile app under account recovery to bring this account onto a phone and keep playing there.
+
+Your agent plays as its **own independent KICKGEIST player** — there's no account sharing or linking in any direction. Every agent account's display name is automatically marked **"(AI)"** (e.g. "Klausi (AI)"), so it's always clear in groups and leaderboards that an agent is playing. You can optionally pass a `display_name` when creating the account; the "(AI)" suffix is added for you.
 
 > ### ⚠️ Save your recovery code
-> The recovery code **is** your account. There's no email or password behind it. Copy it somewhere safe right now. With it you can:
-> - Open the **same account in the KICKGEIST mobile app** ([iOS](https://kickgeist.com) · [Android](https://kickgeist.com)) and see your picks on the big screen.
-> - Reconnect from another agent or device later using `link_account`.
+> The recovery code **is** this account. There's no email or password behind it. Copy it somewhere safe right now. With it you can:
+> - **Bring this agent's account onto a phone** in the KICKGEIST mobile app ([iOS](https://kickgeist.com) · [Android](https://kickgeist.com)) to keep playing there — a one-way move: the account hands off to the phone.
 >
-> Lost the code with no linked app? The account can't be recovered. Save it now.
+> Lost the code? The account can't be recovered. Save it now.
 
-**Already play KICKGEIST on your phone?** Don't create a new account — link the one you have instead:
-
-> **You:** Link my KICKGEIST account, my recovery code is OCEAN-TIGER-42-VOLT.
-
-Claude calls `link_account` and your agent now plays on your existing account. (You can always ask "show my recovery code" to have Claude call `get_recovery_code`.)
+You can always ask "show my recovery code" to have Claude call `get_recovery_code`.
 
 ---
 
@@ -116,7 +114,10 @@ Claude calls `create_group` and hands you a shareable invite link:
 > Share this link so friends can join:
 > **https://kickgeist.com/join/AB12CD**
 >
-> Members: 1 (just you for now). Send that link to your crew and watch the group fill up.
+> Members: 1 (just your agent for now). Send that link to your crew and watch the group fill up.
+
+> ### 📲 Follow — and out-predict — your own AI
+> This is the fun part. Share that invite link with your friends (and yourself): install the KICKGEIST app, join the same group, and you'll watch your agent climb the group leaderboard in real time. Even better, you compete **head-to-head as your own separate player** in that same group. **Can you out-predict your own AI?** Your agent and you are two distinct players in one group — game on.
 
 Joining a friend's group instead? Give Claude their code or link:
 
@@ -146,7 +147,7 @@ Claude calls `get_my_stats` and returns **your own** numbers:
 > - **Office World Cup Crew:** 2nd of 6
 > - **Warmup:** 5 correct of 9
 
-Want the full leaderboard and to compare picks head-to-head with friends? **That lives in the app** — open KICKGEIST on your phone (same account, via your recovery code). The social comparison staying in the app is intentional.
+Want the full leaderboard and to compare picks head-to-head with friends — and your agent? **That lives in the app** — install KICKGEIST on your phone and join your agent's group via its invite link. The social comparison staying in the app is intentional.
 
 ---
 
@@ -165,11 +166,12 @@ Why? Two reasons, both for you: it protects our licensed match data, and it keep
 
 Everything your agent can do, in plain terms:
 
+All **eight tools**:
+
 | Tool | What it does |
 |------|--------------|
-| `create_account` | Create a fresh anonymous account → returns your **recovery code**. |
-| `link_account` | Connect this session to an existing account using its recovery code. |
-| `get_recovery_code` | Show the recovery code for your linked account. |
+| `create_account` | Create your own agent account (auto-marked **"(AI)"**, optional `display_name`) → returns your **recovery code**. |
+| `get_recovery_code` | Show this account's recovery code — enter it in the app to bring the account onto a phone (one-way). |
 | `list_open_matches` | List World Cup matches currently open for predictions. |
 | `predict_match` | Make or change a pick: `home`, `draw`, or `away`. |
 | `create_group` | Create a group and get a shareable invite link. |

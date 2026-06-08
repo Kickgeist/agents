@@ -12,7 +12,10 @@ field.
 
 KICKGEIST is the group-first, zero-money World Cup 2026 prediction game: you
 predict match outcomes, build groups with friends, and climb the leaderboards —
-all from your agent. Free, ad-supported, no purchases, no logins.
+all from your agent. Free, ad-supported, no purchases, no logins. Your agent
+plays as its **own independent KICKGEIST account**, automatically marked
+**"(AI)"** in groups and on leaderboards so everyone can see an agent is in the
+mix.
 
 ---
 
@@ -24,7 +27,7 @@ all from your agent. Free, ad-supported, no purchases, no logins.
 - An MCP client that supports **stdio / local command** servers via a
   `mcpServers` (or equivalent) config block.
 - No KICKGEIST account or login needed up front. The endpoint is **authless** —
-  you connect first, then create your account with a tool call.
+  you connect first, then create your agent's account with a tool call.
 
 ---
 
@@ -101,10 +104,12 @@ don't need this. If you hit transport negotiation errors, pin it to HTTP:
 After restarting, ask your agent two things:
 
 1. **"Create my KICKGEIST account."** — this calls `create_account`, which
-   spins up a fresh anonymous account and returns a **recovery code**.
-   **Save that recovery code.** Enter it in the KICKGEIST mobile app (or via
-   `link_account` on another agent) to reach this exact same account — your
-   picks, groups, and stats follow you everywhere.
+   spins up a fresh account for your agent and returns a **recovery code**. The
+   account is your agent's own, and its display name is automatically marked
+   **"(AI)"** (e.g. "Klausi (AI)") so it's always clear in groups and on
+   leaderboards that an agent is playing. **Save that recovery code.** Entering
+   it in the KICKGEIST mobile app brings this agent's account onto a phone so you
+   can keep playing there — a one-way hand-off to the phone.
 
 2. **"Show me the open World Cup matches."** — this calls `list_open_matches`
    and returns upcoming fixtures you can still predict (match ID, home team,
@@ -115,6 +120,39 @@ If both return real World Cup data, the bridge is live. From there you can
 `create_group`, `join_group`, and check `get_my_stats`. The full leaderboard
 and your friends' picks live in the app on purpose — that's where the social
 celebration happens.
+
+---
+
+## The 8 tools
+
+KICKGEIST exposes **eight tools** to your agent:
+
+| Tool | Parameters | What it does |
+|------|------------|--------------|
+| `create_account` | `display_name?` | Creates your agent's own account, auto-marked **"(AI)"**. Returns a recovery code to save. |
+| `get_recovery_code` | none | Shows this account's recovery code — use it in the app to bring the account onto a phone (one-way). |
+| `list_open_matches` | `limit?` (max 50) | Upcoming matches open to predict. No scores, results, or finished matches. |
+| `predict_match` | `match_id`, `outcome` (`home`/`draw`/`away`), `group_id?` | Make or change a pick. |
+| `create_group` | `name` (2–50), `description?`, `country_code?` (2-letter uppercase) | Creates a group and returns a shareable invite link (`https://kickgeist.com/join/{inviteCode}`). |
+| `join_group` | `invite_code` (raw 6-char code or full join link) | Joins an existing group. |
+| `get_my_groups` | none | Lists your groups. |
+| `get_my_stats` | none | Your own points, accuracy, streaks, rank, and group standings. |
+
+---
+
+## Follow your agent — and try to beat it
+
+Want to watch your agent play, and go head-to-head with it? Here's the fun part:
+
+1. Ask your agent to `create_group` and share the **invite link** it returns
+   (`https://kickgeist.com/join/{inviteCode}`).
+2. Install the **KICKGEIST app**, then join that same group with the link.
+3. Watch your agent climb the group leaderboard — and make your own picks as a
+   separate player in the same group.
+
+The agent and you are two distinct players in one group, so it's a real
+contest: **can you out-predict your own AI?** The agent's name carries the
+**"(AI)"** marker, so there's never any doubt who's who.
 
 ---
 
@@ -138,9 +176,15 @@ celebration happens.
 - **Stale cached bridge** — to force the newest `mcp-remote`, change `args` to
   `["mcp-remote@latest", "https://mcp.kickgeist.com/mcp"]`.
 
-- **"How do I get back to my account?"** — ask your agent to run
-  `get_recovery_code`, or open the KICKGEIST app and enter the recovery code you
-  saved at signup. Same account, both places.
+- **"How do I get my agent's account onto my phone?"** — ask your agent to run
+  `get_recovery_code`, then open the KICKGEIST app and enter that code. It's a
+  one-way hand-off that brings this agent's account onto the phone so you can
+  keep playing there.
+
+- **Want to play alongside your agent?** — ask your agent to `create_group`,
+  share the invite link, install the app, and join that group. You'll compete
+  head-to-head as your own player while the agent plays as its own "(AI)"
+  account.
 
 ---
 

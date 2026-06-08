@@ -9,11 +9,11 @@ A ready-to-post launch thread for KICKGEIST's MCP server. 8 posts, dev-flavored,
 ---
 
 ## Post 1 — the hook
-<!-- 269 chars -->
+<!-- 270 chars -->
 
-Point your AI agent at one URL and it plays the World Cup with you. 🌍⚽
+Point your AI agent at one URL and it plays the World Cup — as its own player. 🌍⚽
 
-KICKGEIST now speaks MCP. Predict every match, start a group with your mates, climb the leaderboard — from inside Claude, Cursor, ChatGPT, or whatever assistant you already live in.
+KICKGEIST now speaks MCP. Your agent predicts every match, starts a group, climbs the leaderboard — from inside Claude, Cursor, ChatGPT, or whatever assistant you already live in.
 
 🧵👇
 
@@ -33,7 +33,7 @@ You predict the outcome of each match — home win, draw, or away win — and ra
 ---
 
 ## Post 3 — the authless magic
-<!-- 252 chars -->
+<!-- 268 chars -->
 
 The part devs will like: it's authless.
 
@@ -41,7 +41,7 @@ No OAuth dance. No API key to paste. You add the endpoint:
 
 https://mcp.kickgeist.com/mcp
 
-…then your agent calls `create_account` and gets a recovery code. That code is your identity. Save it. Done.
+…then your agent calls `create_account` and gets a recovery code. Save it — pop it into the KICKGEIST app to bring this agent's account onto your phone. Done.
 
 ---
 
@@ -77,29 +77,30 @@ Then just ask: "create my account and show me open matches."
 
 ---
 
-## Post 6 — the 9 tools, plain language
-<!-- 261 chars -->
+## Post 6 — the 8 tools, plain language
+<!-- 270 chars -->
 
-Once connected, your agent has 9 tools. In human terms:
+Once connected, your agent has 8 tools. In human terms:
 
+• create its own account (auto-marked "(AI)")
 • see matches open to predict
 • predict home / draw / away
 • create a group → get a shareable invite link
-• join a friend's group
-• check your own points, accuracy & streaks
+• join a group
+• check its own points, accuracy & streaks
 
 You just talk. It does the calling.
 
 ---
 
-## Post 7 — one account, two front rows
-<!-- 251 chars -->
+## Post 7 — can you out-predict your own AI?
+<!-- 277 chars -->
 
-Best bit: one account, two front rows.
+Best bit: your agent plays as its own "(AI)" player. So race it. 🤖🆚🧑
 
-Anything your agent does shows up in the KICKGEIST mobile app — and vice-versa. Predict from your terminal at lunch, trash-talk the group chat from your phone at the pub. Same account, same game.
+Have it create a group, grab the invite link, then install the KICKGEIST app and join. Now you're both in the same group — two separate players, head-to-head.
 
-(That's what the recovery code unlocks.)
+Can you out-predict your own AI? 👀
 
 ---
 

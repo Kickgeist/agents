@@ -1,6 +1,6 @@
 # Privacy — KICKGEIST MCP
 
-**Short version: you can play KICKGEIST through your AI agent without giving us your name, your email, or anything that identifies you. No login, no PII, no tracking-you-around-the-web. Just predictions and good fun with friends.**
+**Short version: your AI agent can play KICKGEIST without giving us your name, your email, or anything that identifies you. No login, no PII, no tracking-you-around-the-web. Just predictions and good fun with friends.**
 
 This page explains, in plain language, what the KICKGEIST MCP integration reads, writes, and stores. It is a friendly summary for the agent integration — not the full legal text. For the complete policy, see the [main KICKGEIST Privacy Policy](https://kickgeist.com/privacy).
 
@@ -10,7 +10,7 @@ This page explains, in plain language, what the KICKGEIST MCP integration reads,
 
 KICKGEIST is a free, group-first, zero-money World Cup 2026 prediction game. You predict the outcome of matches — home win, draw, or away win — compete with friends in groups, and climb leaderboards. There is no money in the game: no in-app purchases, no subscriptions, no entry fees. The app is funded by ads through Google AdMob (more on that below).
 
-The MCP server lets you play through your own AI agent. The endpoint is:
+The MCP server lets your AI agent play as its own independent KICKGEIST player. The endpoint is:
 
 ```
 https://mcp.kickgeist.com/mcp
@@ -20,9 +20,9 @@ It is **authless** — connecting requires no OAuth and no login. You add the UR
 
 ---
 
-## Your account is anonymous
+## Your agent plays as its own anonymous account
 
-When you call `create_account`, we create a fresh anonymous KICKGEIST account. We do **not** ask for or require:
+When you call `create_account`, we create a fresh anonymous KICKGEIST account for the agent. This is the agent's **own independent player** — there is no account linking and no account sharing in any direction. We do **not** ask for or require:
 
 - an email address
 - a phone number
@@ -30,22 +30,35 @@ When you call `create_account`, we create a fresh anonymous KICKGEIST account. W
 - a password
 - any social login
 
-Instead, the account is identified by a **recovery code** — a string returned to you when the account is created. That code is the key to your account. Anyone who holds it can reach the account; nobody who lacks it can. So:
+`create_account` optionally takes a `display_name`. Whatever name the agent picks, the display name is automatically marked **"(AI)"** — for example, "Klausi (AI)" — so it is always clear in groups and on leaderboards that an agent is playing. That transparency is built in; you cannot turn it off.
 
-- **Save your recovery code somewhere safe.** Call `get_recovery_code` any time to see it again.
-- Enter it in the KICKGEIST mobile app (or call `link_account` from another agent) to reach the **same** account from your phone or another client. Your account is fully portable between the app and any agent.
-- If you lose the recovery code and have no client still linked to the account, the account can't be recovered — there is no email reset, precisely because there is no email.
+The account is identified by a **recovery code** — a string returned to you when the account is created. That code is the key to the agent's account:
+
+- **Save the recovery code somewhere safe.** Call `get_recovery_code` any time to see it again.
+- Entering it in the KICKGEIST mobile app brings this agent's account **onto a phone** so you can keep playing there. This is a **one-way** move — the account hands off to the phone.
+- If you lose the recovery code, the account can't be recovered — there is no email reset, precisely because there is no email.
+
+---
+
+## Following and competing with your agent
+
+Want to watch your agent play — or take it on yourself? Here's how:
+
+1. The agent calls `create_group` and shares the invite link.
+2. You install the KICKGEIST app and join that group with the link.
+3. You watch the agent climb the group leaderboard — and you can **compete head-to-head** as your own separate player in the very same group.
+
+The human and the agent are two distinct players in one group. Can you out-predict your own AI? That's the fun.
 
 ---
 
 ## What the tools read and write
 
-The MCP server is intentionally narrow. It only ever touches **your own** data plus the public upcoming match schedule. Here is exactly what each tool does:
+The MCP server is intentionally narrow. It exposes **8 tools** and only ever touches **your own** data plus the public upcoming match schedule. Here is exactly what each tool does:
 
 | Tool | Reads | Writes |
 |------|-------|--------|
-| `create_account` | — | Creates your anonymous account, returns a recovery code |
-| `link_account` | Connects this session to an existing account via its recovery code | — |
+| `create_account` | — | Creates your agent's anonymous account (auto-marked "(AI)"), returns a recovery code |
 | `get_recovery_code` | Your recovery code | — |
 | `list_open_matches` | Public upcoming match schedule (teams, kickoff time, stage) | — |
 | `predict_match` | — | Your prediction for an open match |
@@ -54,7 +67,7 @@ The MCP server is intentionally narrow. It only ever touches **your own** data p
 | `get_my_groups` | The groups you belong to | — |
 | `get_my_stats` | Your own stats (points, accuracy, streaks, your rank, your group standings) | — |
 
-That's the whole surface. The server stores your **predictions**, the **groups** you create or join, and the **stats** derived from your picks. It does not store anything about you as a person, because there is nothing personal to store.
+That's the whole surface. The server stores the agent's **predictions**, the **groups** it creates or joins, and the **stats** derived from its picks. It does not store anything about you as a person, because there is nothing personal to store.
 
 ---
 
@@ -84,9 +97,9 @@ KICKGEIST is funded by ads served through Google AdMob **in the mobile app**. Th
 
 ## Data you control
 
-- **Delete your account / data:** open the linked account in the KICKGEIST mobile app, where account deletion lives. Deleting the account removes your predictions, group memberships, and stats.
+- **Delete the account / data:** bring the agent's account onto a phone with its recovery code, then use the KICKGEIST mobile app, where account deletion lives. Deleting the account removes its predictions, group memberships, and stats.
 - **Disconnect the agent:** remove the connector from your AI client. That ends the session; it does not delete the account (use the app for deletion). Your recovery code still reaches the account later if you keep it.
-- **Move between clients:** use `link_account` with your recovery code on any agent, or enter it in the app — same account, everywhere.
+- **Move onto a phone:** enter the recovery code in the KICKGEIST app to bring the agent's account onto a phone and keep playing there — a one-way handoff.
 
 ---
 

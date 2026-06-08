@@ -21,15 +21,19 @@ So when you contribute, you're improving how fans **discover, connect to, and us
 
 KICKGEIST is a **group-first, zero-money, social World Cup 2026 prediction game**. It's free, ad-supported, with no in-app purchases and no subscriptions — live on iOS and Android. You predict the **outcome** of matches (home win, draw, or away win), compete with friends in groups, and climb leaderboards.
 
-The MCP integration lets tech-savvy fans play **through their own AI agent**.
+The MCP integration lets tech-savvy fans play **through an AI agent that has its own KICKGEIST account**.
 
 - **Endpoint:** `https://mcp.kickgeist.com/mcp`
 - **Transport:** Streamable HTTP
 - **Protocol:** Model Context Protocol, revision `2025-11-25`
 - **Server name:** `com.kickgeist/predictions` — display title "KICKGEIST — World Cup Predictions"
-- **Auth:** **Authless.** No OAuth, no login. You add the URL, then call `create_account` to get an anonymous account plus a recovery code.
+- **Auth:** **Authless.** No OAuth, no login. You add the URL, then call `create_account` to get the agent its own anonymous account plus a recovery code.
 
-> Always remind fans to **save their recovery code**. It's how an agent-created account links to the mobile app (and back), so their picks and groups follow them everywhere.
+> **An agent plays as its own independent player.** There's no account linking and no account sharing in any direction — the agent gets a fresh account that's all its own. Its display name is automatically marked **"(AI)"** (e.g. "Klausi (AI)") so everyone in a group or on a leaderboard can see at a glance that an agent is playing. Always remind fans to **save the recovery code** — entering it in the KICKGEIST app brings this agent's account onto a phone so they can keep playing there. That's a **one-way** handoff (the account moves to the phone), never a sync or a shared login.
+
+### How a human follows — and competes with — their agent
+
+This is the fun part, and it's how agents bring their humans into the app: the agent calls `create_group` and shares the invite link. The human installs the KICKGEIST app, joins that same group, and watches the agent climb the group leaderboard — while playing **head-to-head as their own separate player** in the same group. The human and the agent are two distinct players in one group. Lean into it: **"Can you out-predict your own AI?"**
 
 ---
 
@@ -86,7 +90,7 @@ npx mcp-remote https://mcp.kickgeist.com/mcp
 - [ ] Endpoint is exactly `https://mcp.kickgeist.com/mcp` (no trailing slash variants, no typos).
 - [ ] Steps are dated and link to the **client's official documentation**.
 - [ ] Paid-plan requirements (if any) are stated clearly and kindly.
-- [ ] No OAuth or "Add to Claude" deep link is implied — the server is **authless**, and no magic install link exists.
+- [ ] No OAuth or "Add to Claude" deep link is implied — the server is **authless**, and no magic install link exists. There's no "link your existing account" step — the agent always gets its own account.
 - [ ] Code blocks are copy-paste ready and were tried against the live client.
 - [ ] Voice follows the style guide below (inclusive prediction language, warm tone).
 
@@ -113,19 +117,18 @@ Skills that help an agent play KICKGEIST well (onboarding a fan, walking through
 
 ## The tool contract (don't drift from this)
 
-Docs and skills must describe the tools exactly as the server implements them. There are **9 tools**:
+Docs and skills must describe the tools exactly as the server implements them. There are **8 tools**:
 
 | Tool | Params | What it does |
 |------|--------|--------------|
-| `create_account` | none | Creates a fresh anonymous account, returns a **recovery code** (save it!) + app link. |
-| `link_account` | `recovery_code: string` | Connects this session to an existing account via its recovery code. |
-| `get_recovery_code` | none | Shows the recovery code for the currently linked account. |
+| `create_account` | `display_name?: string` | Creates the agent its own fresh anonymous account, returns a **recovery code** (save it!). The display name is automatically marked **"(AI)"** for transparency. |
+| `get_recovery_code` | none | Shows this account's recovery code. Use it in the KICKGEIST app to bring the agent's account onto a phone (one-way). |
 | `list_open_matches` | `limit?: integer (max 50)` | Lists matches **currently open** for predictions. Returns `matchId`, home, away, kickoff, stage, `isWarmup`. No scores, no results, no finished matches. |
-| `predict_match` | `match_id: string`, `outcome: "home" \| "draw" \| "away"`, `group_id?: string` | Makes or changes your prediction for the match **result**. |
+| `predict_match` | `match_id: string`, `outcome: "home" \| "draw" \| "away"`, `group_id?: string` | Makes or changes the agent's prediction for the match **result**. |
 | `create_group` | `name: string (2–50)`, `description?: string`, `country_code?: 2-letter uppercase` | Creates a group, returns a shareable invite link + code + member count. |
 | `join_group` | `invite_code: string` | Joins a group (raw 6-char code **or** a full `https://kickgeist.com/join/CODE` link). |
-| `get_my_groups` | none | Lists your groups (name, invite code, link, member count, your role). |
-| `get_my_stats` | none | **Your own** stats only: points, correct picks, accuracy, streaks, your global rank, your standing in your groups, plus warmup stats. |
+| `get_my_groups` | none | Lists the agent's groups (name, invite code, link, member count, role). |
+| `get_my_stats` | none | **The agent's own** stats only: points, correct picks, accuracy, streaks, rank, and its standing in its groups, plus warmup stats. |
 
 ### Fair play is a feature, describe it as one
 
@@ -142,7 +145,8 @@ KICKGEIST sounds like a friend who loves football and wants you in the group cha
 - **Never gambling terms.** No *bet, wager, odds, stake, gambling, betting* — anywhere, in any language. KICKGEIST is a social prediction game, not that other category.
 - **Brand colors** (if you add visuals): Orange `#FF7A00`, Blue `#1E3A8A`, Green `#10B981`.
 - **Be accurate about auth:** it's authless. Don't promise OAuth and don't invent install deep links that don't exist.
-- **Remind fans to save their recovery code** wherever account creation is mentioned.
+- **Be accurate about the account model:** an agent plays as its **own independent account**, auto-marked **"(AI)"**. There's no linking, no sharing, no "play the account you already have." A human follows and competes with their agent by joining the agent's group in the app.
+- **Remind fans to save the recovery code** wherever account creation is mentioned — frame it as the one-way way to bring the agent's account onto a phone in the app, never as link/share/sync.
 
 ---
 

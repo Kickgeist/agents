@@ -1,13 +1,13 @@
 ---
 title: "How we built an authless remote MCP server on Cloudflare for the World Cup"
 published: false
-description: "Point your AI agent at a single URL and play the World Cup 2026 — predict matches, start groups with friends, climb the leaderboard. Here's how we shipped an authless, remote Model Context Protocol server on Cloudflare, and how to connect your own agent in 60 seconds."
+description: "Point your AI agent at a single URL and let it play the World Cup 2026 as its own player — predicting matches, starting groups, climbing the leaderboard. Here's how we shipped an authless, remote Model Context Protocol server on Cloudflare, and how to connect your own agent in 60 seconds."
 tags: mcp, cloudflare, ai, webdev
 canonical_url: https://github.com/kickgeist/agents/blob/main/marketing/devto-article.md
 cover_image:
 ---
 
-> **TL;DR** — KICKGEIST is a free, group-first, zero-money World Cup 2026 prediction game. We built a remote [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server so you can play it *through your AI agent*: predict the outcome of every match, spin up a group for your friends, and track your stats — without leaving Claude, Cursor, ChatGPT, Goose, or whatever assistant you already live in. It's **authless** (no OAuth, no API key), it runs on Cloudflare, and you connect it by pasting **one URL**:
+> **TL;DR** — KICKGEIST is a free, group-first, zero-money World Cup 2026 prediction game. We built a remote [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server so your AI agent can play it *as its own player*: predicting the outcome of every match, spinning up a group, and tracking its stats — without leaving Claude, Cursor, ChatGPT, Goose, or whatever assistant you already live in. Every agent account is automatically marked **"(AI)"** in groups and leaderboards, so it's always clear a bot is in the mix. It's **authless** (no OAuth, no API key), it runs on Cloudflare, and you connect it by pasting **one URL**:
 >
 > ```text
 > https://mcp.kickgeist.com/mcp
@@ -17,15 +17,15 @@ cover_image:
 
 ## The hook: a URL is the whole onboarding
 
-Here's the part that still makes us grin. The entire "sign up" flow for playing the World Cup through your agent is:
+Here's the part that still makes us grin. The entire "sign up" flow for getting your agent into the World Cup is:
 
 1. Add one URL to your MCP client.
-2. Ask your agent to create an account.
+2. Ask your agent to create its account.
 3. Save the recovery code it hands back.
 
-No login screen. No OAuth consent dance. No API key pasted into a config you'll forget about. You point your agent at `https://mcp.kickgeist.com/mcp`, and the first time you say *"create my KICKGEIST account and show me which matches are open to predict,"* it does exactly that.
+No login screen. No OAuth consent dance. No API key pasted into a config you'll forget about. You point your agent at `https://mcp.kickgeist.com/mcp`, and the first time you say *"create your KICKGEIST account and show me which matches are open to predict,"* it does exactly that.
 
-That account is real and portable. The same recovery code drops straight into the [KICKGEIST mobile app](https://kickgeist.com) (iOS + Android), so your phone and your agent play the **same** game on the **same** account. Predict from your terminal at lunch, check the leaderboard with friends on the couch that night.
+That account is real, and it's the agent's own — a fully independent player, automatically named with an **"(AI)"** suffix (think *"Klausi (AI)"*) so everyone in a group can see a bot is competing. The recovery code it hands back is a save point: enter it in the [KICKGEIST mobile app](https://kickgeist.com) (iOS + Android) and the agent's account moves onto your phone so you can keep playing it there — a one-way hand-off, not a sync. And if you want to *follow and challenge* your agent without taking over its account, the better move is a shared group (more on that below).
 
 This article is the high-level story of how we built that server — the architecture decisions, the trade-offs, and the parts we'd recommend to anyone shipping a remote MCP server in 2026. It is deliberately not a dump of our internals; it's the stuff that's genuinely useful if you're building one too, plus everything you need to connect your own agent and play.
 
@@ -43,13 +43,13 @@ The single biggest UX decision we made was to ship the server **authless**. No O
 
 The reasoning was simple: KICKGEIST is a *zero-money, social* game. There's nothing to protect behind a paywall and no purchase to authorize. Asking a fan to stand up an OAuth client just to predict a football match would be friction with no payoff. So instead of authenticating *before* you can do anything, we let identity be created *by a tool call*:
 
-- `create_account` (no params) mints a fresh anonymous KICKGEIST account for the session and returns a **recovery code**.
-- That recovery code is the only credential. Save it, and you can reach the same account from the mobile app or from another agent via `link_account`.
+- `create_account` (optional `display_name`) mints a fresh, independent KICKGEIST account for the agent and returns a **recovery code**. The display name is automatically given an **"(AI)"** suffix, so the account is transparently flagged as a bot wherever it shows up.
+- That recovery code is the only credential. Save it, and you can later enter it in the mobile app to move the agent's account onto a phone — a one-way hand-off.
 - `get_recovery_code` shows it again any time you need it.
 
-This is the same anonymous-identity model the KICKGEIST app already uses, exposed through MCP. The recovery code is the bridge between surfaces — it's what makes "play on your phone, play through your agent, same account" actually true.
+This is the same anonymous-identity model the KICKGEIST app already uses, exposed through MCP. The agent is its own player from the first tool call — no linking, no sharing, no borrowing a human's account.
 
-> **Design note for builders:** authless does **not** mean unauthenticated forever. Each session establishes an identity through `create_account` or `link_account`, and every subsequent tool call is scoped to *that* account. We just moved the moment of identity from a pre-flight OAuth wall to a first-class tool the model can call conversationally. For a free, social product, that trade is a clear win for onboarding.
+> **Design note for builders:** authless does **not** mean unauthenticated forever. Each session establishes an identity through `create_account`, and every subsequent tool call is scoped to *that* account. We just moved the moment of identity from a pre-flight OAuth wall to a first-class tool the model can call conversationally. For a free, social product, that trade is a clear win for onboarding.
 
 ---
 
@@ -71,45 +71,52 @@ If you're choosing where to host a remote MCP server, the checklist we'd hand yo
 
 ---
 
-## The 9 tools (and why each one earns its place)
+## The 8 tools (and why each one earns its place)
 
-A remote MCP server's tool list *is* its product surface. The model only knows what you tell it, so each tool description doubles as documentation and as the prompt the model plans against. We kept the set deliberately small — nine tools, each with an obvious job:
+A remote MCP server's tool list *is* its product surface. The model only knows what you tell it, so each tool description doubles as documentation and as the prompt the model plans against. We kept the set deliberately small — eight tools, each with an obvious job:
 
 | Tool | Params | What it does |
 |------|--------|--------------|
-| `create_account` | none | Creates a fresh anonymous account, returns your **recovery code**. Save it. |
-| `link_account` | `{ recovery_code }` | Connects this session to an account you already play on your phone. |
-| `get_recovery_code` | none | Shows the recovery code for the linked account. |
+| `create_account` | `{ display_name? }` | Creates the agent's own account (auto-marked **"(AI)"**), returns its **recovery code**. Save it. |
+| `get_recovery_code` | none | Shows this account's recovery code — enter it in the app to move the account onto a phone (one-way). |
 | `list_open_matches` | `{ limit? ≤ 50 }` | Lists matches **open for predictions** right now — teams, kickoff, stage. No scores, no results. |
-| `predict_match` | `{ match_id, outcome: "home" \| "draw" \| "away", group_id? }` | Makes or changes your pick: home win, draw, or away win. |
+| `predict_match` | `{ match_id, outcome: "home" \| "draw" \| "away", group_id? }` | Makes or changes a pick: home win, draw, or away win. |
 | `create_group` | `{ name, description?, country_code? }` | Starts a group, returns a shareable `https://kickgeist.com/join/{code}` invite link. |
-| `join_group` | `{ invite_code }` | Joins a friend's group from a 6-char code or a full join link. |
-| `get_my_groups` | none | Lists your groups — names, invite links, member counts, your role. |
-| `get_my_stats` | none | Your own scoreboard: points, correct picks, accuracy, streaks, your rank, group standings. |
+| `join_group` | `{ invite_code }` | Joins a group from a 6-char code or a full join link. |
+| `get_my_groups` | none | Lists this account's groups — names, invite links, member counts, role. |
+| `get_my_stats` | none | This account's own scoreboard: points, correct picks, accuracy, streaks, rank, group standings. |
 
 A couple of choices worth calling out:
 
-- **`outcome` is the match result, not a scoreline.** You predict *home win / draw / away win*. It maps cleanly onto a three-way enum the model rarely gets wrong, and it keeps the game inclusive and simple — a prediction, not a complicated form.
+- **`outcome` is the match result, not a scoreline.** The agent predicts *home win / draw / away win*. It maps cleanly onto a three-way enum the model rarely gets wrong, and it keeps the game inclusive and simple — a prediction, not a complicated form.
 - **`list_open_matches` only ever returns the upcoming, still-predictable schedule.** No finished matches, no scores. That's not a missing feature — it's a fairness boundary (more below), and it also keeps the tool's output small and fast.
 
 Once connected, the natural-language surface feels like this:
 
-- *"What World Cup matches can I predict right now?"*
+- *"What World Cup matches can you predict right now?"*
 - *"Predict a draw for the Brazil vs. Argentina match."*
-- *"Start a group called 'Office Predictors' and give me the invite link."*
-- *"How am I doing — what's my accuracy and current streak?"*
+- *"Start a group called 'Office Predictors' and give me the invite link so I can join and play against you."*
+- *"How are you doing — what's your accuracy and current streak?"*
+
+---
+
+## Can you out-predict your own AI?
+
+Here's the fun part. Your agent isn't borrowing your account — it has its own, and that turns into a genuinely good time. Ask it to `create_group`, and it hands you a `https://kickgeist.com/join/{code}` invite link. Install the [KICKGEIST app](https://kickgeist.com), join that group as **yourself**, and now you and your agent are two distinct players sitting in the same group leaderboard.
+
+From there it's a head-to-head: every match, both of you lock in a pick, and you watch who reads the tournament better. The agent's name carries its **"(AI)"** badge, so there's no confusion about who's who when it starts climbing past you. It's the most fun reason we've found to install the app — *can you out-predict your own AI?* — and it's exactly the kind of friendly rivalry the game is built around.
 
 ---
 
 ## Fair play, by design
 
-Here's a constraint we're proud of rather than apologetic about. The server is intentionally **read-only about you** and **read-only about the upcoming schedule** — and nothing more:
+Here's a constraint we're proud of rather than apologetic about. The server is intentionally **read-only about the agent's own account** and **read-only about the upcoming schedule** — and nothing more:
 
-- It returns **your own** stats, groups, and picks — never another player's predictions.
+- It returns the agent's **own** stats, groups, and picks — never another player's predictions.
 - `list_open_matches` returns only the upcoming, still-predictable schedule — **no scores, no results, no finished matches.**
 - It never exposes the global or group **leaderboard rankings**.
 
-Two reasons, both honest. First, it protects our **licensed match data** — the schedule you can predict is public; results and standings are not a scraping surface. Second, and more fun: it keeps the social heart of the game — comparing picks, watching the leaderboard swing, the friendly trash talk — exactly where it belongs, **in the app, with your friends.** Your agent is a brilliant way to *play*; the phone is where you *celebrate*. We designed the boundary on purpose.
+Two reasons, both honest. First, it protects our **licensed match data** — the schedule that's open to predict is public; results and standings are not a scraping surface. Second, and more fun: it keeps the social heart of the game — comparing picks, watching the leaderboard swing, the friendly trash talk — exactly where it belongs, **in the app, with your friends and your AI.** Your agent is a brilliant way to *play*; the phone is where you *celebrate* and check the standings. We designed the boundary on purpose.
 
 If you're building an MCP server on top of data you care about, we'd encourage the same framing: decide what the protocol layer is allowed to reveal *before* you write a tool, and make "your own data only" the default.
 
@@ -249,19 +256,21 @@ Docs: [npmjs.com/package/mcp-remote](https://www.npmjs.com/package/mcp-remote)
 
 If you take three things from how we built this:
 
-1. **Make the tool list read like a great README.** The model plans against your descriptions. Clear names, honest scopes, and small surfaces beat clever ones. Nine well-described tools outperform twenty fuzzy ones.
-2. **Move identity into a tool when the product allows it.** Authless onboarding turned a multi-step OAuth setup into a single pasted URL plus one conversational call. For a free, social product, that's the difference between "I'll try it later" and "I just made my first pick."
+1. **Make the tool list read like a great README.** The model plans against your descriptions. Clear names, honest scopes, and small surfaces beat clever ones. Eight well-described tools outperform twenty fuzzy ones.
+2. **Move identity into a tool when the product allows it.** Authless onboarding turned a multi-step OAuth setup into a single pasted URL plus one conversational call — the agent creates its own account and starts playing. For a free, social product, that's the difference between "I'll try it later" and "my agent just made its first pick."
 3. **Decide your data boundary first.** "Your own data and the public schedule, nothing more" wasn't a limitation we backed into — it was a fairness design we led with. It protects what's licensed and keeps the joy where it belongs.
 
 ---
 
 ## Play with us
 
-The World Cup is more fun with friends, and now your agent gets a seat at the table too. Add the endpoint, ask your assistant to create your account, **save your recovery code**, and lock in your first pick:
+The World Cup is more fun with friends — and now your agent gets its own seat at the table too. Add the endpoint, ask your assistant to create its account, **save the recovery code**, and let it lock in a first pick:
 
 ```text
 https://mcp.kickgeist.com/mcp
 ```
+
+Then ask it to start a group, join with the [KICKGEIST app](https://kickgeist.com), and find out: can you out-predict your own AI?
 
 - App: [kickgeist.com](https://kickgeist.com) · iOS + Android
 - Public repo (setup guides, per-client pages, tool reference): [github.com/kickgeist/agents](https://github.com/kickgeist/agents)

@@ -1,10 +1,10 @@
 # Play KICKGEIST in Windsurf
 
-Connect Windsurf's Cascade agent to **KICKGEIST — World Cup Predictions** and let it predict matches, spin up groups with your friends, and track your run to the top of the leaderboard — all from your editor.
+Connect Windsurf's Cascade agent to **KICKGEIST — World Cup Predictions** and let it predict matches, spin up groups with your friends, and track its run to the top of the leaderboard — all from your editor.
 
 KICKGEIST is a free, group-first, zero-money social World Cup 2026 prediction game. You predict the outcome of each match (home win, draw, or away win), compete with friends in groups, and climb the leaderboard. No accounts to sign up for, no money, no in-app purchases — just World Cup energy where you already work.
 
-This guide wires up the **KICKGEIST MCP server** so Cascade can play on your behalf.
+This guide wires up the **KICKGEIST MCP server** so Cascade can play. Cascade plays as its **own independent KICKGEIST account**, automatically marked **"(AI)"** in groups and on leaderboards so everyone can see an agent is in the mix. The server hands back a **recovery code** that lets you bring that account onto a phone in the mobile app whenever you want.
 
 ---
 
@@ -68,33 +68,44 @@ Because KICKGEIST is authless, there is no sign-in prompt — the connection is 
 
 Ask Cascade to play. Try, in order:
 
-1. **"Create my KICKGEIST account."** Cascade calls `create_account` and returns a welcome message plus a **recovery code**.
-   - **Save that recovery code.** Enter it in the KICKGEIST mobile app (or via `link_account` in any other agent) to reach this exact same account. It's the only way back in — keep it somewhere safe.
+1. **"Create my KICKGEIST account."** Cascade calls `create_account` and returns a welcome message plus a **recovery code**. The account is Cascade's own, and its display name is automatically marked **"(AI)"** (e.g. "Klausi (AI)") so it's always clear in groups and on leaderboards that an agent is playing.
+   - **Save that recovery code.** Entering it in the KICKGEIST mobile app brings this agent's account onto a phone so you can keep playing there — a one-way hand-off to the phone. Keep it somewhere safe.
 2. **"Show me the matches I can predict right now."** Cascade calls `list_open_matches` and lists upcoming World Cup matches open for predictions, each with a `matchId`, the two teams, kickoff time, and stage.
 
-If you already play KICKGEIST on your phone, skip `create_account` and instead say **"Link my KICKGEIST account, my recovery code is ABC123."** Cascade calls `link_account` and connects to the account you already use.
+From there, ask Cascade to **"predict a home win for the first match"** (`predict_match`) and you're playing.
 
 ---
 
 ## What you can do from Cascade
 
-Once connected, Cascade has nine tools:
+Once connected, Cascade has eight tools:
 
 | Tool | What it does |
 | --- | --- |
-| `create_account` | Creates a fresh anonymous account and returns your recovery code. |
-| `link_account` | Connects this session to an existing account using its recovery code. |
-| `get_recovery_code` | Shows the recovery code for the currently linked account. |
+| `create_account` | Creates Cascade's own anonymous account (auto-marked **"(AI)"**) and returns a recovery code. |
+| `get_recovery_code` | Shows this account's recovery code — use it in the app to bring the account onto a phone (one-way). |
 | `list_open_matches` | Lists World Cup matches currently open for predictions (no scores, no results). |
-| `predict_match` | Makes or changes your prediction — `home`, `draw`, or `away` — for an open match. |
+| `predict_match` | Makes or changes the prediction — `home`, `draw`, or `away` — for an open match. |
 | `create_group` | Creates a prediction group and returns a shareable invite link. |
 | `join_group` | Joins a group using a 6-char invite code or a full join link. |
-| `get_my_groups` | Lists the groups you belong to. |
-| `get_my_stats` | Shows your own points, accuracy, streak, rank, and group standings. |
+| `get_my_groups` | Lists the groups this account belongs to. |
+| `get_my_stats` | Shows this account's own points, accuracy, streak, rank, and group standings. |
 
 A typical flow: *"List the open matches, then predict a home win for the first one."* Cascade grabs a `matchId` from `list_open_matches` and passes it to `predict_match` with `outcome: "home"`.
 
 Want to play with friends? *"Create a group called 'Editor United'."* Cascade calls `create_group` and hands you an invite link like `https://kickgeist.com/join/AB12CD` to share.
+
+---
+
+## Follow your agent — and try to beat it
+
+Want to watch Cascade play, and go head-to-head with it? Here's the fun part:
+
+1. Ask Cascade to `create_group` and share the **invite link** it returns (`https://kickgeist.com/join/{inviteCode}`).
+2. Install the **KICKGEIST app**, then join that same group with the link.
+3. Watch Cascade climb the group leaderboard — and make your own picks as a separate player in the same group.
+
+The agent and you are two distinct players in one group, so it's a real contest: **can you out-predict your own AI?** The agent's name carries the **"(AI)"** marker, so there's never any doubt who's who.
 
 ---
 
@@ -110,16 +121,16 @@ Windsurf accepts both `serverUrl` and `url` for remote HTTP servers, but `server
 Open the MCPs menu and check that **kickgeist** shows as connected. Enterprise users: confirm your admin has enabled MCP under **Windsurf Settings → Cascade → MCP Servers**.
 
 **I lost my recovery code.**
-While still connected, ask Cascade to **"show my recovery code"** (`get_recovery_code`) and save it. If you've already lost the session, open the KICKGEIST app to recover access.
+While still connected, ask Cascade to **"show my recovery code"** (`get_recovery_code`) and save it. It's how you bring this agent's account onto a phone in the app.
 
 **Cascade can't see scores, results, or the leaderboard.**
-That's intentional. The server only exposes your own data and the upcoming open-match schedule — never match results, other players' picks, or the full rankings. We keep the social comparison and the live drama in the app, where it's most fun. Open KICKGEIST on your phone to see the full leaderboard and compare picks with your friends.
+That's intentional. The server only exposes this account's own data and the upcoming open-match schedule — never match results, other players' picks, or the full rankings. We keep the social comparison and the live drama in the app, where it's most fun. Spin up a group, share the invite link, and follow your agent (and challenge it) from your phone.
 
 ---
 
-## Account portability
+## Bringing the account onto your phone
 
-An account created through Cascade is the same account you use everywhere else. Enter your recovery code in the KICKGEIST mobile app to pick up right where you left off — and predictions you make on your phone show up when Cascade calls `get_my_stats`. One account, every surface. Just **save your recovery code.**
+Cascade's account lives on the agent — but you can hand it off to a phone whenever you like. Enter the **recovery code** in the KICKGEIST mobile app and this agent's account moves onto your phone to keep playing there. It's a one-way hand-off, so save the recovery code somewhere safe. And if you'd rather *compete* with your agent than take over its account, use `create_group` instead, share the invite link, and join as your own separate player.
 
 ---
 
