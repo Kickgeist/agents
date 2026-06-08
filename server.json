@@ -1,0 +1,18 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "com.kickgeist/predictions",
+  "title": "KICKGEIST — World Cup Predictions",
+  "description": "Predict World Cup 2026 matches, play with friends, climb the leaderboard — from your AI agent. Free.",
+  "version": "1.0.0",
+  "websiteUrl": "https://kickgeist.com",
+  "repository": {
+    "url": "https://github.com/kickgeist/agents",
+    "source": "github"
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.kickgeist.com/mcp"
+    }
+  ]
+}

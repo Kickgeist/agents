@@ -1,0 +1,112 @@
+name: Validate server.json
+
+# Keeps the MCP server manifest publishable: server.json must always be
+# well-formed JSON and, best-effort, conform to the Model Context Protocol
+# registry schema. Runs on every change to the manifest (or this workflow)
+# so a broken descriptor never reaches the registry or a fan's agent.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "server.json"
+      - ".github/workflows/validate-server-json.yml"
+  pull_request:
+    paths:
+      - "server.json"
+      - ".github/workflows/validate-server-json.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-server-json-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate server.json
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Validate JSON is well-formed
+        run: |
+          echo "Parsing server.json with the Node JSON parser..."
+          node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+            try {
+              JSON.parse(readFileSync("server.json", "utf8"));
+              console.log("server.json is well-formed JSON.");
+            } catch (err) {
+              console.error("server.json is NOT valid JSON:");
+              console.error(err.message);
+              process.exit(1);
+            }
+          '
+
+      - name: Check required fields and invariants
+        run: |
+          echo "Asserting the manifest still describes the KICKGEIST MCP server..."
+          node --input-type=module -e '
+            import { readFileSync } from "node:fs";
+            const m = JSON.parse(readFileSync("server.json", "utf8"));
+            const errors = [];
+
+            // Core registry fields must be present.
+            for (const field of ["$schema", "name", "version"]) {
+              if (!m[field]) errors.push(`missing required field: ${field}`);
+            }
+
+            // Server identity must not drift.
+            if (m.name !== "com.kickgeist/predictions") {
+              errors.push(`unexpected name: ${JSON.stringify(m.name)} (expected "com.kickgeist/predictions")`);
+            }
+
+            // The streamable-http remote endpoint is the whole point of this manifest.
+            const remotes = Array.isArray(m.remotes) ? m.remotes : [];
+            const remote = remotes.find((r) => r && r.url === "https://mcp.kickgeist.com/mcp");
+            if (!remote) {
+              errors.push("no remote with url https://mcp.kickgeist.com/mcp");
+            } else if (remote.type !== "streamable-http") {
+              errors.push(`remote transport is ${JSON.stringify(remote.type)} (expected "streamable-http")`);
+            }
+
+            if (errors.length) {
+              console.error("server.json failed invariant checks:");
+              for (const e of errors) console.error(`  - ${e}`);
+              process.exit(1);
+            }
+            console.log("server.json invariants hold (name, version, streamable-http endpoint).");
+          '
+
+      - name: Validate against MCP registry schema (best-effort)
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          SCHEMA_URL="$(node -e 'process.stdout.write(JSON.parse(require("fs").readFileSync("server.json","utf8"))["$schema"] || "")')"
+          if [ -z "$SCHEMA_URL" ]; then
+            echo "No \$schema declared in server.json; skipping schema validation."
+            exit 0
+          fi
+          echo "Declared schema: $SCHEMA_URL"
+
+          if ! curl -fsSL --retry 3 --retry-delay 5 -o schema.json "$SCHEMA_URL"; then
+            echo "::warning::Could not download the MCP registry schema (network/registry unavailable). Skipping schema validation; structural checks above still passed."
+            exit 0
+          fi
+
+          echo "Running JSON Schema validation with ajv..."
+          npx --yes ajv-cli@5 validate \
+            --spec=draft2020 \
+            -s schema.json \
+            -d server.json \
+            --strict=false \
+            --all-errors

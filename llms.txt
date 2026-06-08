@@ -1,0 +1,56 @@
+# KICKGEIST — World Cup Predictions (MCP)
+
+> Play the World Cup 2026 prediction game through your own AI agent. KICKGEIST is a group-first, zero-money, social prediction game: you predict the OUTCOME of each match (home win, draw, or away win), build groups with friends, and climb leaderboards — all free, AdMob-funded, with no in-app purchases and no subscriptions. This MCP server lets your agent create an account, see which matches are still open, lock in picks, spin up groups, and track your own stats — and the very same account lives on the KICKGEIST mobile app, reachable by recovery code.
+
+## Connect (start here)
+
+- [MCP endpoint](https://mcp.kickgeist.com/mcp): Single Streamable HTTP endpoint. Add this URL to your agent — that is the whole setup. No OAuth, no login (authless). Protocol: Model Context Protocol, revision 2025-11-25.
+- [Quickstart](https://github.com/kickgeist/agents/blob/main/README.md): The fastest path — add the endpoint, call `create_account`, save your recovery code, then `list_open_matches` and `predict_match`. First pick in under a minute.
+- [Server descriptor (server.json)](https://github.com/kickgeist/agents/blob/main/server.json): Registry metadata. Server name `com.kickgeist/predictions`, display title "KICKGEIST — World Cup Predictions".
+
+## The 9 tools (exact contract)
+
+- `create_account`: No params. Creates a fresh anonymous KICKGEIST account for this session and returns a RECOVERY CODE plus a welcome message and app link. SAVE THE RECOVERY CODE — it is how you reach this same account in the mobile app or from another agent.
+- `link_account`: `{ recovery_code: string }`. Connects this session to an EXISTING account using its recovery code (shown in the app under account/recovery, or when the account was created). Use this to play on your phone and your agent as one account.
+- `get_recovery_code`: No params. Shows the recovery code for the currently linked account so you can save it or enter it in the app.
+- `list_open_matches`: `{ limit?: integer (max 50) }`. Lists matches CURRENTLY OPEN for predictions (before kickoff, inside the prediction window). Returns matchId, home team, away team, kickoff time, stage, and isWarmup. Returns no scores and no finished matches — only the upcoming schedule you can still predict. Grab a matchId here to predict.
+- `predict_match`: `{ match_id: string, outcome: "home" | "draw" | "away", group_id?: string }`. Makes or changes your prediction for an open match. `outcome` is the match RESULT you predict — home team wins, a draw, or away team wins. Optional `group_id` scopes the pick to one of your groups.
+- `create_group`: `{ name: string (2–50 chars), description?: string, country_code?: 2-letter uppercase }`. Creates a prediction group and returns a shareable invite link `https://kickgeist.com/join/{inviteCode}`, the invite code, and member count. Share it so friends can join.
+- `join_group`: `{ invite_code: string }`. Joins an existing group. Accepts a raw 6-character code OR a full `https://kickgeist.com/join/CODE` link.
+- `get_my_groups`: No params. Lists the groups you belong to — name, invite code, invite link, member count, and your role.
+- `get_my_stats`: No params. Returns YOUR OWN stats only: total points, correct picks, accuracy, current and best streak, your global rank, your standings within your groups, plus warmup stats.
+
+## How to play (typical flow)
+
+- [Create your identity](https://github.com/kickgeist/agents/blob/main/README.md#what-can-my-agent-do): Call `create_account` once, then save the recovery code somewhere safe. This is your KICKGEIST account.
+- [Find open matches](https://github.com/kickgeist/agents/blob/main/README.md#what-can-my-agent-do): Call `list_open_matches` to see what is still open for predictions and copy a matchId.
+- [Make a pick](https://github.com/kickgeist/agents/blob/main/README.md#what-can-my-agent-do): Call `predict_match` with the matchId and `outcome` of `home`, `draw`, or `away`. Change it any time before kickoff.
+- [Play with friends](https://github.com/kickgeist/agents/blob/main/README.md#what-can-my-agent-do): Call `create_group` to get an invite link, or `join_group` with a friend's code, then scope picks to a group with the optional `group_id`.
+- [Track your progress](https://github.com/kickgeist/agents/blob/main/README.md#what-can-my-agent-do): Call `get_my_stats` to see your points, accuracy, streaks, and group standings.
+
+## Per-client install
+
+- [Claude (claude.ai / Desktop)](https://support.claude.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp): Settings → Connectors → "Add custom connector" → paste `https://mcp.kickgeist.com/mcp` → Add. No OAuth step (authless). Works on Free (1 connector), Pro, Max, Team, and Enterprise.
+- [Claude Code (CLI)](https://code.claude.com/docs/en/mcp): Run `claude mcp add --transport http kickgeist https://mcp.kickgeist.com/mcp`, then `/mcp` to confirm it connected.
+- [ChatGPT](https://developers.openai.com/api/docs/guides/developer-mode): Paid plans only (Plus/Pro/Business/Enterprise/Edu — not Free). Settings → Apps & Connectors → Advanced settings → enable Developer mode → Create connector → paste the URL. Developer mode is labeled "powerful but dangerous", so review what you connect.
+- [Perplexity](https://www.perplexity.ai/help-center/en/articles/13915507-adding-custom-remote-connectors): Paid plans (Pro/Max/Enterprise). Settings → Connectors → "+ Custom connector" → Remote → enter the https URL.
+- [Cursor](https://cursor.com/docs/context/mcp/install-links): One-click deep link `cursor://anysphere.cursor-deeplink/mcp/install?name=kickgeist&config=<BASE64>`, where BASE64 is the base64 of `{"url":"https://mcp.kickgeist.com/mcp"}`. Or add to `~/.cursor/mcp.json`: `{"mcpServers":{"kickgeist":{"url":"https://mcp.kickgeist.com/mcp"}}}`.
+- [VS Code (Copilot agent mode)](https://code.visualstudio.com/api/extension-guides/ai/mcp): One-click `vscode:mcp/install?<url-encoded JSON {"name":"kickgeist","type":"http","url":"https://mcp.kickgeist.com/mcp"}>`. Or `.vscode/mcp.json`: `{"servers":{"kickgeist":{"type":"http","url":"https://mcp.kickgeist.com/mcp"}}}`.
+- [Windsurf](https://docs.windsurf.com/windsurf/cascade/mcp): Add to `~/.codeium/windsurf/mcp_config.json`: `{"mcpServers":{"kickgeist":{"serverUrl":"https://mcp.kickgeist.com/mcp"}}}`.
+- [Goose](https://block.github.io/goose/docs/getting-started/using-extensions/): One-click `goose://extension?type=streamable_http&url=https%3A%2F%2Fmcp.kickgeist.com%2Fmcp&name=KICKGEIST&description=World%20Cup%20predictions`. Or Desktop → Add custom extension → Streamable HTTP → URL.
+- [Cline](https://docs.cline.bot/mcp/connecting-to-a-remote-server): Remote Servers tab → name + URL → transport Streamable HTTP. Or mcpServers JSON: `{"kickgeist":{"url":"https://mcp.kickgeist.com/mcp"}}`.
+- [Zed](https://zed.dev/docs/ai/mcp): Add to `settings.json`: `{"context_servers":{"kickgeist":{"url":"https://mcp.kickgeist.com/mcp"}}}`.
+- [Jan](https://jan.ai/docs/desktop/integrations/mcp-servers): Settings → MCP Servers → "+ Add MCP Server" → transport HTTP (Streamable HTTP) → paste the URL.
+- [Continue](https://docs.continue.dev/customize/deep-dives/mcp): In `config.yaml`: `mcpServers: [{name: KICKGEIST, type: streamable-http, url: https://mcp.kickgeist.com/mcp}]`.
+- [LibreChat (self-host, admin)](https://www.librechat.ai/docs/configuration/librechat_yaml/object_structure/mcp_servers): In `librechat.yaml`: `mcpServers: kickgeist: {type: streamable-http, url: https://mcp.kickgeist.com/mcp}`.
+- [Universal fallback (stdio-only clients)](https://www.npmjs.com/package/mcp-remote): Run `npx mcp-remote https://mcp.kickgeist.com/mcp` to bridge a Streamable HTTP server into any stdio-only client.
+
+## What the server exposes (fair play by design)
+
+- [Your data only](https://github.com/kickgeist/agents/blob/main/README.md#privacy--fair-play): The server intentionally returns only your own data and the upcoming open-match schedule. It never returns match results, other players' picks, or the global/group leaderboard. This protects our licensed match data and keeps the social comparison where it shines — in the app. Treat it as a feature, not a limit.
+- [Open the app for the full picture](https://kickgeist.com): The KICKGEIST mobile app (iOS + Android) shows the full leaderboard, friends' picks, and the live social experience. Your agent account and your app account are the same account — link them with your recovery code.
+
+## More
+
+- [GitHub: kickgeist/agents](https://github.com/kickgeist/agents): This public repo — quickstart, examples, and the server descriptor.
+- [KICKGEIST website](https://kickgeist.com): About the game, links to the iOS and Android apps.

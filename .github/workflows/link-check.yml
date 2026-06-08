@@ -1,0 +1,84 @@
+name: Link Check
+
+# Keeps the public KICKGEIST agents docs honest: every link a fan or AI
+# tinkerer clicks should actually land somewhere.
+#
+# Two modes, so external flakiness never blocks a docs PR:
+#   • internal-links (push / PR): OFFLINE — verifies every relative link resolves
+#     to a real file. Deterministic, fails the build on a broken internal link.
+#   • external-links (weekly / manual): ONLINE sweep for external link rot.
+#     Non-blocking (fail:false), and skips custom-scheme install deep links
+#     (cursor://, goose://, vscode:, windsurf://) and the dynamic MCP endpoint
+#     (it speaks MCP, not plain GET), which are not normal web URLs.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**/*.md"
+      - "**/*.markdown"
+      - "llms.txt"
+      - ".github/workflows/link-check.yml"
+  pull_request:
+    paths:
+      - "**/*.md"
+      - "**/*.markdown"
+      - "llms.txt"
+      - ".github/workflows/link-check.yml"
+  schedule:
+    # Weekly sweep (Mondays 06:00 UTC) so external link rot surfaces on its own.
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: link-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  internal-links:
+    name: Internal links (offline)
+    if: github.event_name != 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Verify relative links resolve
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --offline
+            --no-progress
+            --verbose
+            "**/*.md"
+            "**/*.markdown"
+            "llms.txt"
+          fail: true
+
+  external-links:
+    name: External links (online sweep)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Sweep external links (report only)
+        uses: lycheeverse/lychee-action@v2
+        with:
+          args: >-
+            --no-progress
+            --verbose
+            --accept 200,206,403,429
+            --max-retries 2
+            --retry-wait-time 10
+            --exclude "^(cursor|goose|vscode|vscode-insiders|windsurf):"
+            --exclude "^mailto:"
+            --exclude "mcp\.kickgeist\.com/mcp"
+            "**/*.md"
+            "**/*.markdown"
+            "llms.txt"
+          fail: false

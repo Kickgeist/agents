@@ -1,0 +1,90 @@
+name: Publish to MCP Registry
+
+# Publishes server.json to the official MCP Registry so AI agents can
+# discover "KICKGEIST — World Cup Predictions" (com.kickgeist/predictions)
+# and start playing the moment they add the connector.
+#
+# Manual-only by design: a registry publish is a deliberate release step,
+# so we trigger it from the Actions tab (workflow_dispatch) rather than on
+# every push.
+#
+# ---------------------------------------------------------------------------
+# Namespace ownership — com.kickgeist (DNS-verified, no secrets required)
+# ---------------------------------------------------------------------------
+# The "com.kickgeist" namespace is claimed via DNS verification, which means
+# this workflow authenticates by proving control of the kickgeist.com domain
+# rather than by storing any registry credential in GitHub Secrets.
+#
+# One-time setup (already done; documented here so it stays reproducible):
+#   1. Generate the verification token the registry expects for the namespace:
+#        mcp-publisher auth dns --domain kickgeist.com
+#      This prints a TXT record value, e.g.
+#        v=MCPv1; k=ed25519; p=<base64-public-key>
+#   2. Add that value as a TXT record on the apex domain:
+#        Host/Name:  kickgeist.com   (some DNS UIs use "@")
+#        Type:       TXT
+#        Value:      v=MCPv1; k=ed25519; p=<base64-public-key>
+#   3. Wait for DNS propagation, then confirm:
+#        dig +short TXT kickgeist.com
+#
+# At publish time the CLI signs the request with the matching private key
+# (the holder of the key listed in the DNS TXT record proves ownership of the
+# whole com.kickgeist namespace). We pass that key via the MCP_PRIVATE_KEY
+# repository secret — it is the signing material, never embedded in this file.
+# Rotating it is just: regenerate, update the TXT record, update the secret.
+#
+# Required repository secret:
+#   MCP_PRIVATE_KEY  — the ed25519 private key whose public half is published
+#                      in the kickgeist.com DNS TXT record above.
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Validate server.json without publishing to the registry"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+# Never let two publishes race each other to the registry.
+concurrency:
+  group: publish-registry
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish server.json
+    runs-on: ubuntu-latest
+    environment: mcp-registry
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Install mcp-publisher CLI
+        run: go install github.com/modelcontextprotocol/registry/cmd/mcp-publisher@latest
+
+      - name: Validate server.json
+        # Fail fast on a malformed manifest before we ever touch the registry.
+        run: mcp-publisher validate server.json
+
+      - name: Authenticate via DNS-verified namespace
+        if: ${{ !inputs.dry_run }}
+        env:
+          MCP_PRIVATE_KEY: ${{ secrets.MCP_PRIVATE_KEY }}
+        run: mcp-publisher login dns --domain kickgeist.com --private-key "$MCP_PRIVATE_KEY"
+
+      - name: Publish to MCP Registry
+        if: ${{ !inputs.dry_run }}
+        run: mcp-publisher publish server.json
+
+      - name: Dry run summary
+        if: ${{ inputs.dry_run }}
+        run: |
+          echo "Dry run: server.json validated successfully — nothing published." >> "$GITHUB_STEP_SUMMARY"
