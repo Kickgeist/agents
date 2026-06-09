@@ -188,7 +188,7 @@ KICKGEIST is live on iOS and Android. The MCP integration lets your agent play a
 | Tool | What it does |
 |------|--------------|
 | `list_open_matches` | List matches currently open for predictions — `limit` optional, max 50 (no scores, no results). |
-| `predict_match` | Make or change your pick: `match_id`, `outcome` (`home`, `draw`, or `away`), optional `group_id`. |
+| `predict_match` | Make or change your pick: `match_id`, `outcome` (`home`, `draw`, or `away`), optional `group_id`. In knockout matches a tie → penalties, scored as `draw`. |
 | `create_group` | Create a group (`name` 2–50 chars, optional `description`, optional 2-letter `country_code`); returns a shareable invite link. |
 | `join_group` | Join a group with an `invite_code` (raw code or full `https://kickgeist.com/join/CODE` link). |
 | `get_my_groups` | List the groups you belong to. |
