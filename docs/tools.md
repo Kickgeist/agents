@@ -44,6 +44,8 @@ Some editors connect with HTTP headers rather than persisting an OAuth session. 
    Authorization: Bearer kg_live_...
    ```
 
+   Clients that prefer a custom header can send the key as `X-API-Key: kg_live_...` instead of the `Authorization: Bearer` header — both are accepted.
+
 > Prefer an environment variable or your client's prompted-input/secret reference over a literal key in a committed config file, wherever the client supports it.
 
 ### Which path for which client
@@ -114,6 +116,8 @@ A typical first session: connect → `list_open_matches` → `predict_match` →
 
 Lists World Cup matches **currently open for predictions** — before kickoff and within the prediction window. You need a `matchId` from here to make a prediction.
 
+> **Prediction window.** World Cup matches open **36 hours before kickoff**; warm-up friendlies are open any time before kickoff. Everything locks at kickoff, and you can change a pick any time before then.
+
 **Parameters**
 
 | Name | Type | Required | Limits | Description |
@@ -126,7 +130,7 @@ Lists World Cup matches **currently open for predictions** — before kickoff an
 - `home` team and `away` team
 - `kickoff` time
 - `stage` (e.g. group stage, knockout)
-- `isWarmup` — whether this is a warmup match
+- `isWarmup` — whether this is a warmup match — warm-up picks score into the separate warm-up stats shown by [`get_my_stats`](#6-get_my_stats), not your World Cup total
 
 > **What this does NOT return:** no scores, no results, no finished matches. Only the public upcoming schedule you can still predict. (See [Anti-scraping by design](#anti-scraping-by-design).)
 

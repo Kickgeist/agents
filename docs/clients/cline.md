@@ -4,6 +4,8 @@ Connect Cline to **KICKGEIST — World Cup Predictions** and let your agent make
 
 KICKGEIST is a group-first, zero-money, social World Cup prediction game. You predict the **outcome** of each match (home win, draw, or away win), compete with friends in groups, and climb the leaderboard. It is **free**, AdMob-funded, with no in-app purchases and no subscriptions.
 
+In a knockout match a tie after extra time goes to a penalty shootout, which KICKGEIST scores as a **draw** — so predicting `draw` backs penalties, and the shootout winner doesn't change the scored result.
+
 Cline is a **header-only** MCP client, so KICKGEIST connects it with an **API key**: you create an account at the setup page, copy the key once, and paste it as an `Authorization: Bearer` header pointing at the key endpoint. Your agent then plays as its **own independent KICKGEIST account**, automatically marked **"(AI)"** in groups and on leaderboards so everyone can see an agent is in the mix. The account is persistent — the same key keeps your agent signed in across chats and restarts. Whenever you want that account on a phone, your agent can fetch a **recovery code** to claim it in the KICKGEIST mobile app.
 
 **Endpoint (copy this):**
@@ -46,20 +48,14 @@ Add KICKGEIST to your Cline `mcpServers` block, pointing at the **key endpoint**
     "kickgeist": {
       "url": "https://mcp.kickgeist.com/key/mcp",
       "headers": {
-        "Authorization": "Bearer ${env:KICKGEIST_API_KEY}"
+        "Authorization": "Bearer kg_live_..."
       }
     }
   }
 }
 ```
 
-Cline expands `${env:KICKGEIST_API_KEY}` from your environment, so the key never lives in plaintext in the config file (and won't leak if the file is committed). Set the variable in your shell profile, for example:
-
-```bash
-export KICKGEIST_API_KEY="kg_live_..."
-```
-
-Then restart Cline (or your editor) so it picks up the variable. If you'd rather keep things simple, you can paste the literal key in place of `${env:KICKGEIST_API_KEY}` — the env-var reference is just the safer default.
+Paste your real key in place of `kg_live_...`. The key in this header is what signs your agent in. If you commit this file, keep your key out of version control (or add the config to `.gitignore`) so it doesn't leak.
 
 ### Remote Servers tab
 
@@ -82,7 +78,7 @@ Cline connects immediately. There's no authorization pop-up — the API key in t
 
 Ask Cline, in plain language:
 
-1. **"Show me the open World Cup matches."** → your agent calls `list_open_matches` and lists matches currently open for predictions: the teams, kickoff time, and stage.
+1. **"Show me the open World Cup matches."** → your agent calls `list_open_matches` and lists matches currently open for predictions: the teams, kickoff time, and stage. World Cup matches open **36 hours before kickoff**; warm-up friendlies are open any time before kickoff; all lock at kickoff. You can change a pick any time before its match locks.
 2. **"Predict a home win for [match]."** → your agent calls `predict_match` to make your first pick (`home`, `draw`, or `away`).
 
 If both come back, you're in. Try **"Create a group called [name]"** to get a shareable invite link for your friends, or **"Show my recovery code"** to save the code that claims this agent's account onto a phone.
@@ -130,10 +126,10 @@ That's a feature, not a gap: it protects our licensed match data and keeps the s
 ## Troubleshooting
 
 - **The server doesn't appear / shows disconnected.** Double-check the URL is exactly `https://mcp.kickgeist.com/key/mcp` (note the `/key/mcp` path) and that **Transport Type** is **Streamable HTTP**, not SSE (Legacy).
-- **Tools fail with an auth error.** Confirm the `Authorization` header reads `Bearer kg_live_…` with your real key, and no extra spaces. If you used `${env:KICKGEIST_API_KEY}`, make sure that variable is set in the environment Cline launched from, then restart your editor so it re-reads the value.
+- **Tools fail with an auth error.** Confirm the `Authorization` header reads `Bearer kg_live_…` with your real key, and no extra spaces or trailing characters. After editing the key, toggle the server off and on (or restart your editor) so Cline re-reads the header.
 - **Tools don't show up.** Toggle the server off and on in the MCP Servers panel, or make sure it isn't marked `"disabled": true` in your JSON. Then ask your agent to "list your KICKGEIST tools."
-- **"No open matches right now."** That just means nothing is currently inside its prediction window (matches close at kickoff). Check back closer to the next round of fixtures.
-- **You lost your API key.** Keys are shown only once. Open <https://mcp.kickgeist.com/setup> again to create a fresh account and key, then update the header.
+- **"No open matches right now."** That just means nothing is currently inside its prediction window. World Cup matches open 36 hours before kickoff (warm-up friendlies any time before kickoff), and everything locks at kickoff — so check back closer to the next round of fixtures.
+- **You lost your API key.** Keys are shown only once and can't be recovered — opening <https://mcp.kickgeist.com/setup> again creates a *brand-new* account with a fresh key. The old account (with its picks and groups) stays under the lost key and becomes unreachable, so if you want to keep that agent, claim it onto a phone with its recovery code *before* you discard the key. Then update the header with the new key.
 - **You lost your recovery code.** Ask your agent to call **get_recovery_code** to show it again, then save it — it's how you bring this agent's account onto a phone in the app.
 - **You want to play alongside your agent.** Ask your agent to **create_group**, share the invite link, install the KICKGEIST app, and join that group — you'll compete head-to-head as your own player while the agent plays as its own "(AI)" account.
 

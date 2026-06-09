@@ -23,6 +23,8 @@ Leave blank and post as a text submission (the body links to the repo and endpoi
 
 I built KICKGEIST, a free social World Cup 2026 prediction game (you predict each match outcome — home / draw / away — and compete with friends in groups). It's been live on iOS and Android for a while. The new thing I want to show HN is the **MCP server**: your AI agent can now play the whole game as its own independent player, instead of you tapping through the app.
 
+(In the knockout rounds a match that goes to penalties is scored as a draw, so picking "draw" there means you're backing the shootout — the winner of the shootout doesn't change the scored result. The prediction window: World Cup matches open 36h before kickoff, warm-up friendlies any time before kickoff, and everything locks at kickoff.)
+
 The hook is short: connect your MCP client once, and your agent can list the matches still open for predictions, lock in picks, spin up a group, and check its stats. No app required.
 
 There are two ways to connect, both on one domain (`mcp.kickgeist.com`), and both give your agent a persistent account that survives chats and restarts:
@@ -51,12 +53,12 @@ If you want to claim the agent's account onto your phone, there's a **recovery c
 
 Here's the angle I'm having the most fun with. The agent isn't a proxy for you; it's a separate player. So the agent calls `create_group` and shares the invite link; you install the KICKGEIST app, join that group, and watch the agent climb the group leaderboard — and you compete head-to-head as your own player in the same group. Can you out-predict your own AI? You and the agent are two distinct players in one group, settling it match by match.
 
-### Anti-scraping boundaries (also deliberate)
+### Fair-play boundaries (also deliberate)
 
 The server is read-only about *you* and read-only about the *upcoming schedule*, and nothing else. Concretely:
 
 - `get_my_stats` returns **your own** points/accuracy/streak/rank only — never another player's picks.
-- `list_open_matches` returns only matches still inside the prediction window: matchId, teams, kickoff, stage. **No scores, no results, no finished matches.**
+- `list_open_matches` returns only matches still inside the prediction window: matchId, teams, kickoff, predict-by time, stage, and a warm-up flag (so agents can already predict warm-up friendlies today, before the tournament). **No scores, no results, no finished matches.**
 - There is no tool that returns the global or group leaderboard rankings.
 
 Two honest reasons. First, the match schedule/results data is licensed, so a tool that streams results would be a redistribution problem. Second — and this is the part I actually care about — the fun of comparing picks and arguing about the standings is the *social* core of the product, and I want that to happen in the app with your friends, not get flattened into a JSON dump an agent reads alone. So the API surface is intentionally narrow. It's a product boundary as much as a data-licensing one, and I'd rather be upfront that it's a deliberate limit than pretend the server is a general-purpose data feed.
@@ -65,7 +67,7 @@ Two honest reasons. First, the match schedule/results data is licensed, so a too
 
 Identity comes from connecting (one-tap OAuth consent, or an API key) — not from a tool call. So there's no `create_account` step; the agent is already itself the moment it connects.
 
-- `list_open_matches` — upcoming, still-predictable schedule only (`limit` optional, max 50)
+- `list_open_matches` — upcoming, still-predictable schedule only, with kickoff/predict-by times and a warm-up-friendly flag (`limit` optional, max 50)
 - `predict_match` — make/change a pick (`home` | `draw` | `away`), optionally scoped to a group
 - `create_group` / `join_group` / `get_my_groups` — groups + shareable invite links
 - `get_my_stats` — your own stats only

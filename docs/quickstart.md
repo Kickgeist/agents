@@ -22,9 +22,9 @@ In Claude (claude.ai or the Desktop app):
 
 4. Click **Add**.
 
-Claude opens a **one-tap consent page**. Approving it creates a fresh, anonymous KICKGEIST account for your agent — **no password, no sign-up form** — and Claude **stays signed in across chats and restarts** by refreshing the token for you. (Works on Free with your one custom-connector slot, and on Pro, Max, Team, and Enterprise.) There are no OAuth client-id or secret fields to fill in.
+Claude opens a **one-tap consent page**. Approving it creates a fresh, anonymous KICKGEIST account for your agent — **no password, no sign-up form** — and Claude **stays signed in across chats and restarts** by refreshing the token for you. (Custom connectors are available across Claude plans — check Anthropic's [current plan availability](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp).) There are no OAuth client-id or secret fields to fill in.
 
-> Full Claude walkthrough: [Getting started with custom connectors](https://support.claude.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp).
+> Full Claude walkthrough: [Get started with custom connectors using remote MCP](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp).
 
 **On Claude Code (CLI)?** One line:
 
@@ -55,7 +55,7 @@ Your agent plays as its **own independent KICKGEIST player** — there's no acco
 
 > ### ⚠️ Save your recovery code
 > The recovery code lets you **claim this account onto your phone**. There's no email or password behind it. Copy it somewhere safe right now. With it you can:
-> - **Bring this agent's account onto a phone** in the KICKGEIST mobile app ([iOS](https://kickgeist.com) · [Android](https://kickgeist.com)) to keep playing there — a one-way move: the account hands off to the phone.
+> - **Bring this agent's account onto a phone** in the KICKGEIST mobile app ([iOS](https://apps.apple.com/app/kickgeist/id6756968300) · [Android](https://play.google.com/store/apps/details?id=com.kickgeist.app)) to keep playing there — a one-way move: the account hands off to the phone.
 >
 > Lost the code? Just ask Claude to show it again any time — "show my recovery code" calls `get_recovery_code`.
 
@@ -79,6 +79,8 @@ Claude calls `list_open_matches` and shows the upcoming schedule that's still op
 
 This list shows **only upcoming, still-open matches** — kickoff time, teams, and stage. No scores and no results live here; those stay in the app on purpose (more on that in [What the agent can and can't see](#what-the-agent-can-and-cant-see)).
 
+> **When does a match open?** World Cup matches open for predictions **36 hours before kickoff**; warm-up friendlies are open any time before kickoff. Every match — and any change to your pick — **locks at kickoff**. If a match you're after isn't on the list yet, it's still more than 36 hours out.
+
 ---
 
 ## Step 4 — Make your prediction
@@ -96,6 +98,8 @@ Changed your mind before kickoff? Just say so — calling `predict_match` again 
 > **You:** Actually, make it a draw.
 >
 > **Claude:** Updated! ✅ Your pick is now a **draw** for Brazil vs. Croatia.
+
+> **Predicting a knockout match?** Knockout games can't end level: if it's tied after extra time it goes to a penalty shootout, which KICKGEIST scores as a **draw**. So picking **draw** on a knockout match backs it going to penalties — the shootout winner doesn't change the scored result. (In the group stage, **draw** is just a normal level result.) More in the [tools reference](./tools.md#2-predict_match).
 
 ---
 
@@ -259,7 +263,7 @@ Then point your client at the **key endpoint** with the key as a bearer header. 
 
 - **Zed:** add a custom server pointing at `https://mcp.kickgeist.com/key/mcp` with the `Authorization: Bearer kg_live_...` header.
 
-For more clients and the full per-client walkthrough, see the install guide in the repo README.
+For more clients and the full per-client walkthrough, see the [client matrix](../README.md#works-with-your-agent) — there's a step-by-step page for each one.
 
 ---
 

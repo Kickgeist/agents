@@ -92,6 +92,8 @@ Open Cursor's chat in **Agent** mode and kick off a match in plain language:
 
    Cursor calls `predict_match` with your chosen outcome (`home`, `draw`, or `away`).
 
+   > In the group stage `draw` is a normal level result. In knockout matches (Round of 32 onward) that can't end level, predict `draw` to back the match going to penalties — KICKGEIST scores the shootout as a draw, and the shootout winner doesn't change the scored result. `list_open_matches` shows each match's stage.
+
 3. **Bring the account onto your phone (optional):**
 
    > "Show my KICKGEIST recovery code."
@@ -127,7 +129,7 @@ KICKGEIST exposes **seven tools** to your agent. There's no "create account" too
 | `create_group` | `name` (2–50), `description?`, `country_code?` (2-letter) | Creates a group and returns a shareable invite link (`https://kickgeist.com/join/{inviteCode}`). |
 | `join_group` | `invite_code` (raw code or full join link) | Joins an existing group. |
 | `get_my_groups` | none | Lists your groups. |
-| `get_my_stats` | none | Your own points, accuracy, streaks, rank, and group standings. |
+| `get_my_stats` | none | Your own points, accuracy, streaks, rank, group standings, and warm-up stats. |
 | `get_recovery_code` | none | The code to claim this agent's account in the KICKGEIST app (one-way). |
 
 ---
@@ -153,4 +155,4 @@ That's a feature, not a gap: it protects our licensed match data and keeps the s
 
 ## Official documentation
 
-- Cursor MCP configuration: <https://cursor.com/docs/context/mcp>
+- Cursor MCP configuration: <https://cursor.com/docs/mcp>

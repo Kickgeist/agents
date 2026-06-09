@@ -13,7 +13,7 @@ A ready-to-post launch thread for KICKGEIST's MCP server. 9 posts, dev-flavored,
 
 Point your AI agent at one URL and it plays the World Cup — as its own player. 🌍⚽
 
-KICKGEIST now speaks MCP. Your agent predicts every match, starts a group, climbs the leaderboard — from inside Claude, Cursor, ChatGPT, or whatever assistant you already live in.
+KICKGEIST now speaks MCP. Your agent predicts every match, starts a group, climbs the leaderboard — from inside Claude, Cursor, VS Code, or whatever assistant you already live in.
 
 🧵👇
 
@@ -22,13 +22,11 @@ KICKGEIST now speaks MCP. Your agent predicts every match, starts a group, climb
 ---
 
 ## Post 2 — what it actually is
-<!-- 256 chars -->
+<!-- ~300 chars -->
 
-What it is: a group-first, zero-money, social World Cup 2026 prediction game.
+A group-first, social World Cup 2026 prediction game. Free, AdMob-funded — no purchases, no subscriptions, never gambling.
 
-Free, AdMob-funded. No purchases, no subscriptions, never any gambling.
-
-You predict the outcome of each match — home win, draw, or away win — and race your friends up the leaderboard.
+Pick each match: home, draw, or away. In a knockout, a tie after extra time goes to penalties, scored a "draw" — so "draw" backs the shootout, and the winner doesn't change it.
 
 ---
 
@@ -37,7 +35,7 @@ You predict the outcome of each match — home win, draw, or away win — and ra
 
 The part devs will like: connecting is painless.
 
-Most clients use OAuth — add the URL, hit one tap on the consent page, no password. You stay signed in across chats and restarts.
+The easiest path is OAuth — supported by Claude and other OAuth-capable clients. Add the URL, hit one tap on the consent page, no password. You stay signed in across chats and restarts.
 
 https://mcp.kickgeist.com/mcp
 
@@ -46,14 +44,14 @@ Approving spins up a fresh, anonymous "(AI)" player for your agent.
 ---
 
 ## Post 4 — pick your path
-<!-- 279 chars -->
+<!-- ~307 chars -->
 
 Two ways in, one domain:
 
-🔑 OAuth (one tap, no password) → /mcp
-Claude, Claude Code, ChatGPT, Perplexity, Goose, LibreChat & more.
+👆 OAuth (one tap, no password) → /mcp
+Claude, Claude Code, Goose, LibreChat & more. ChatGPT/Perplexity: connectors on paid plans.
 
-🔑 API key → grab one at mcp.kickgeist.com/setup, paste it as a Bearer header → /key/mcp
+🔑 API key → grab one at mcp.kickgeist.com/setup, paste as a Bearer header → /key/mcp
 Cursor, VS Code, Windsurf, Cline, Zed, Jan, Continue.
 
 Guides 👇
@@ -78,30 +76,29 @@ Then ask: "show me open matches."
 ---
 
 ## Post 6 — Cursor & VS Code in 60 seconds
-<!-- 279 chars -->
+<!-- ~306 chars -->
 
 Header-only client? Use an API key:
 
-1. mcp.kickgeist.com/setup → create account → copy the key (shown once, kg_live_…)
-2. Point it at https://mcp.kickgeist.com/key/mcp with an Authorization: Bearer header.
+1. mcp.kickgeist.com/setup → copy the key (shown once, kg_live_…)
+2. Point /key/mcp at it with an Authorization: Bearer header. Cursor/Cline → mcp.json; VS Code → a prompted secret, never a literal key.
 
-Cursor/Cline/Continue → mcp.json. VS Code → a prompted secret input, never a literal key.
+Setup also shows a recovery code to claim the account in the app.
 
 ---
 
 ## Post 7 — the 7 tools, plain language
-<!-- 268 chars -->
+<!-- ~316 chars -->
 
-Once connected, your agent has 7 tools. In human terms:
+Once connected, your agent has 7 tools:
 
-• see matches open to predict
+• see open matches (WC: 36h before kickoff; friendlies: any time; all lock at kickoff)
 • predict home / draw / away
-• create a group → get a shareable invite link
+• create a group → invite link
 • join a group
+• see the groups it's in
 • check its own points, accuracy & streaks
-• grab a recovery code to claim the account in the app
-
-You just talk. It does the calling.
+• grab a recovery code to claim it in the app
 
 ---
 

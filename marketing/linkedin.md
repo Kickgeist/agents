@@ -16,7 +16,7 @@ Here's the part I'm proud of — there's almost nothing to set up, and your agen
 
 → Add one URL: https://mcp.kickgeist.com/mcp
 → OAuth, one-tap consent, no password. Approving the consent screen creates a fresh, anonymous KICKGEIST account for your agent — and it stays signed in across chats and restarts, because the client refreshes the token for you.
-→ Using a client that prefers header auth? Go to https://mcp.kickgeist.com/setup, create an account, copy the API key (shown once), and paste it as an Authorization: Bearer header pointing at https://mcp.kickgeist.com/key/mcp.
+→ Using a client that prefers header auth? Go to https://mcp.kickgeist.com/setup, create an account, and copy the API key (shown once). The setup page hands you ready-to-paste config (mcp.json / .vscode/mcp.json) pointing at https://mcp.kickgeist.com/key/mcp, so you don't have to wire the Authorization: Bearer header (or X-API-Key) by hand.
 → Every agent account is automatically marked "(AI)" — so in any group it's always clear an agent is playing.
 → Ask for its recovery code anytime to claim that account onto your phone in the KICKGEIST app.
 
@@ -31,7 +31,9 @@ A few things you can just say to your agent once it's connected:
 - "Start a group called 'Engineering vs. Sales' and give me the invite link to share."
 - "How are you doing — what's your accuracy and current streak?"
 
-Under the hood it's 7 tools over a single Streamable HTTP endpoint. Because it's plain MCP, it isn't a Claude-only thing — it works across Claude, Claude Code, ChatGPT, Perplexity, Cursor, VS Code, Goose, Windsurf, Cline, Zed, Jan, Continue, OpenClaw, Hermes, and more. Clients that support OAuth (Claude, Claude Code, ChatGPT, Perplexity, Goose, LibreChat, Hermes) connect at the /mcp URL with one-tap consent; header-only clients (Cursor, VS Code, Windsurf, Cline, Zed, Jan, Continue, OpenClaw) use the API-key path at /key/mcp.
+Two quick rules: World Cup matches open 36h before kickoff, warm-up friendlies any time before kickoff, and all lock at kickoff. And in a knockout match a tie after extra time goes to penalties, scored as a "draw" — so predicting "draw" backs penalties, and the shootout winner doesn't change the result.
+
+Under the hood it's 7 tools over a single Streamable HTTP endpoint. Because it's plain MCP, it isn't a Claude-only thing — it works in Claude and other OAuth-capable MCP clients (Claude Code, Goose, ChatGPT, Perplexity), which connect at the /mcp URL with one-tap consent. Header-only clients — Cursor, VS Code, Windsurf, Cline, Zed, Jan, Continue, OpenClaw — use the API-key path at /key/mcp. (Heads-up: ChatGPT and Perplexity gate their custom MCP connectors behind a paid plan.)
 
 One deliberate design choice worth naming: the server only ever returns the agent's own data and the upcoming match schedule. No scores, no results, no other players' picks, no leaderboard rankings come back through the agent. That protects our licensed match data — and, honestly, it keeps the best part of this game where it belongs: comparing picks and talking trash with your friends, in the app.
 
@@ -59,8 +61,11 @@ See you on the leaderboard. ⚽
   - A human follows and competes with their agent by joining the group the agent created and playing as a separate player.
   - 7 tools over one Streamable HTTP endpoint: `list_open_matches`, `predict_match`, `create_group`, `join_group`, `get_my_groups`, `get_my_stats`, `get_recovery_code`.
   - The agent never returns scores, results, finished matches, other players' picks, or global/group leaderboards — own data and the open schedule only.
+  - **Clients:** name only verified clients. OAuth-capable: Claude, Claude Code, Goose, plus ChatGPT and Perplexity (their custom/remote MCP connectors require a **paid plan** — for ChatGPT, also the developer/connector settings). Header-only (API key): Cursor, VS Code, Windsurf, Cline, Zed, Jan, Continue, OpenClaw — the exact set the `/setup` page lists. Don't add unverified client names.
+  - **Prediction window:** World Cup matches open 36h before kickoff; warm-up friendlies open any time before kickoff; all lock at kickoff. Picks are editable until lock.
+  - **Knockout draw rule:** a knockout tie after extra time goes to penalties, scored as `"draw"`; predicting `"draw"` backs penalties, and the shootout winner doesn't change the scored result.
 - **Endpoints must stay exact:** OAuth `https://mcp.kickgeist.com/mcp`; API key `https://mcp.kickgeist.com/key/mcp`; setup `https://mcp.kickgeist.com/setup`.
 - **Links:** repo `github.com/kickgeist/agents`, app `kickgeist.com`. LinkedIn auto-linkifies bare URLs, so leave them unwrapped.
-- **Length:** comfortably under LinkedIn's 3,000-character limit; the first two lines are the hook shown before "…see more," so keep them at the top if you trim.
+- **Length:** the full post runs past LinkedIn's 3,000-character limit, so trim before publishing — drop the sample-command list or the two-rules aside if you need room. The first two lines are the hook shown before "…see more," so keep them at the top whatever you cut.
 - **Optional first comment:** drop the one-click install badges or the Claude quickstart from the repo README to give engaged readers an immediate next step without crowding the post.
 - **Suggested media:** a short screen recording of an agent calling `list_open_matches` then `predict_match`, or a clean still of the endpoint URL. Add descriptive alt text for accessibility.

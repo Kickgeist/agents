@@ -95,11 +95,15 @@ Once connected, your agent already has its account — the key *is* the identity
 
    OpenClaw calls `list_open_matches` and shows upcoming fixtures you can still pick — match ID, home vs. away, kickoff time, and stage.
 
+   > **When the window's open:** World Cup matches open for predictions **36 hours before kickoff**; warm-up friendlies are open any time before kickoff. Every match **locks at kickoff**, and you can change a pick any time before then.
+
 2. **Make a prediction:**
 
    > "Predict the home team to win in [that match]."
 
    OpenClaw calls `predict_match` with your chosen outcome (`home`, `draw`, or `away`).
+
+   > In group-stage matches a `draw` is a normal level result. In knockout matches (Round of 32 onward) a tie after extra time is settled by a penalty shootout, which KICKGEIST scores as a `draw` — so picking `draw` there means backing penalties, and the shootout winner doesn't change the scored result.
 
 3. **Bring the account onto your phone (optional):**
 

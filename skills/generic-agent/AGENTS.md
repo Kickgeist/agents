@@ -136,6 +136,8 @@ connect (OAuth / API key)  →  list_open_matches  →  predict_match  →  grou
 
 Call `list_open_matches` (use `limit` if a short list is wanted, e.g. `limit: 10`). Present the matches clearly — home vs. away, kickoff time, and stage. Flag `isWarmup` matches so it's clear which are friendlies/warmups vs. real tournament games. You'll need a `matchId` from here to predict.
 
+A match is open exactly as long as it appears in `list_open_matches` — World Cup matches open about **36 hours before kickoff**, warm-up friendlies are open **any time before kickoff**, and **all picks lock at kickoff**. If a `matchId` you remember isn't in a fresh list, its window has sealed — re-list rather than guess.
+
 ### 3. Lock in a prediction
 
 Call `predict_match` with the `match_id` and an `outcome` of `"home"`, `"draw"`, or `"away"`:
@@ -143,6 +145,8 @@ Call `predict_match` with the `match_id` and an `outcome` of `"home"`, `"draw"`,
 - `home` = the **home team wins**
 - `draw` = the match ends **level**
 - `away` = the **away team wins**
+
+In **knockout matches** (Round of 32 onward) a tie can't stand — if it's level after extra time it goes to a **penalty shootout, which KICKGEIST scores as a `"draw"`**. So predicting `"draw"` on a knockout match means **backing penalties**; the shootout winner does **not** change the scored result. `"home"`/`"away"` means that team wins inside regulation or extra time.
 
 Map the human's natural phrasing to the right team — e.g. "I think Brazil edges it" when Brazil is the away side → `outcome: "away"`. **Confirm which team you mapped to which side** before committing, so a home/away mix-up never costs a pick. Picks are changeable any time before kickoff — just call `predict_match` again on the same open match.
 

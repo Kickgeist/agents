@@ -30,7 +30,7 @@ Add the server URL. The first time the agent uses it, Claude opens a single **co
 https://mcp.kickgeist.com/mcp
 ```
 
-- **Claude Desktop / claude.ai:** Settings → Connectors → Add custom connector → paste the URL → Add. Leave any Advanced settings as-is — there's nothing to enter. The first use opens the one-tap consent page; approve it. (See `support.claude.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp`.)
+- **Claude Desktop / claude.ai:** Settings → Connectors → Add custom connector → paste the URL → Add. Leave any Advanced settings as-is — there's nothing to enter. The first use opens the one-tap consent page; approve it. (See `support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp`.)
 - **Claude Code (CLI):** `claude mcp add --transport http kickgeist https://mcp.kickgeist.com/mcp`, then `/mcp` to confirm. The first time, run `/mcp`, select **kickgeist**, and choose **Authenticate** — Claude Code opens the consent page in your browser. Approve it (no password) and the account is created and stays signed in. (See `code.claude.com/docs/en/mcp`.)
 
 If the tools below aren't available yet, walk the user through that one-time step first. There's no "Add to Claude" deep link — just the URL and a one-tap consent.
@@ -67,7 +67,9 @@ Follow this order. Don't invent match ids.
 
 2. **Find what's open.** Call `list_open_matches` (use `limit` if you want more, up to 50). Present matchups in plain language — *"Brazil vs. Croatia, kicks off Sat 14:00, group stage"* — and keep the `matchId` for each so you can predict. If a match isn't in this list, its window has closed; you can't predict it.
 
-3. **Make the pick.** Call `predict_match` with the `match_id` from step 2 and an `outcome` of `"home"`, `"draw"`, or `"away"`. Be explicit about what you're picking — *"Got it: home win for Brazil"* — so there's no ambiguity. You can re-call it on the same open match to **change** the pick before the window seals. To scope a pick to a specific group, pass that group's `group_id` (from `get_my_groups`).
+3. **Make the pick.** Call `predict_match` with the `match_id` from step 2 and an `outcome` of `"home"` (home team wins), `"draw"` (level), or `"away"` (away team wins). Be explicit about what you're picking — *"Got it: home win for Brazil"* — so there's no ambiguity. You can re-call it on the same open match to **change** the pick before the window seals. To scope a pick to a specific group, pass that group's `group_id` (from `get_my_groups`).
+
+   **Knockout matches play differently.** In the group stage a `"draw"` is a normal level result. But in knockout matches (Round of 32 onward) a tie after extra time goes to a **penalty shootout**, which KICKGEIST scores as a `"draw"` — so picking `"draw"` in a knockout means you're backing penalties (the shootout winner doesn't change the scored result), while `"home"`/`"away"` means that team wins inside regulation or extra time.
 
 4. **Bring friends in (optional, encouraged).**
    - **Start a group:** `create_group` with a `name` (2–50 chars). Hand the user the **invite link** (`https://kickgeist.com/join/{inviteCode}`) to share with friends. Suggest a fun name if they want one.
@@ -81,6 +83,7 @@ Follow this order. Don't invent match ids.
 Timing is the heart of the game. Always confirm a match is open with `list_open_matches` before predicting.
 
 - **A match is open exactly as long as it appears in `list_open_matches`.** Inside that window you can pick and re-pick freely; once a match drops off the list, its window has sealed and the pick is locked. Treat the list as the source of truth rather than quoting a fixed deadline — that keeps everyone on equal footing with no last-minute team-sheet edge.
+- **For context:** World Cup matches open ~36 hours before kickoff and warm-up friendlies open any time before kickoff — every match locks at kickoff. Still, trust the live list and the predict-by time on each match (shown in UTC, `YYYY-MM-DD HH:MM`) rather than computing a deadline yourself.
 - **Warmup friendlies stay open right up to kickoff** (look for `isWarmup: true`). They're the perfect low-stakes way to test the setup and get a feel for the flow before the tournament.
 
 If a `matchId` you remember from earlier isn't in a fresh `list_open_matches`, its window has closed — re-list rather than guessing.

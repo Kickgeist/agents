@@ -86,7 +86,7 @@ Add KICKGEIST from your terminal with the interactive configurator:
 5. When asked about a timeout, the default is fine. Leave any custom-headers prompt empty — OAuth handles sign-in, so there's no token to enter here.
 6. Finish the configurator. KICKGEIST is now available the next time you start a Goose session. The first time you use a KICKGEIST tool, Goose opens the **one-tap consent page** in your browser — approve it (no password) and your agent's account is created and stays signed in.
 
-> The extension is written to your Goose config (`~/.config/goose/config.yaml`). You can also start a one-off session with it via `goose session --with-remote-extension "https://mcp.kickgeist.com/mcp"` if your CLI version supports that flag — but the `goose configure` flow above is the durable, recommended path.
+> The extension is written to your Goose config (`~/.config/goose/config.yaml`). You can also start a one-off session with it via `goose session --with-streamable-http-extension "https://mcp.kickgeist.com/mcp"` — but the `goose configure` flow above is the durable, recommended path.
 
 ---
 
@@ -104,7 +104,7 @@ Once the extension is enabled and the one-tap consent is approved, your agent al
 
    > "Predict the home team to win in [that match]."
 
-   Goose calls `predict_match` with your chosen outcome (`home`, `draw`, or `away`).
+   Goose calls `predict_match` with your chosen outcome (`home`, `draw`, or `away`). World Cup matches open for predictions **36 hours before kickoff**, warm-up friendlies are open any time before kickoff, and every match **locks at kickoff** — change your pick freely until then. In a knockout match a tie after extra time goes to a **penalty shootout, scored as a `draw`** — so predicting `draw` backs penalties, and the shootout winner doesn't change the result.
 
 3. **Bring the account onto your phone (optional):**
 
@@ -168,5 +168,5 @@ That's a feature, not a gap: it protects our licensed match data and keeps the s
 
 ## Official documentation
 
-- Goose extensions guide: <https://block.github.io/goose/docs/getting-started/using-extensions/>
+- Goose extensions guide: <https://goose-docs.ai/docs/getting-started/using-extensions/>
 - `mcp-remote` (stdio / OAuth bridge): <https://www.npmjs.com/package/mcp-remote>

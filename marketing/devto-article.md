@@ -86,7 +86,8 @@ A remote MCP server's tool list *is* its product surface. The model only knows w
 A couple of choices worth calling out:
 
 - **`outcome` is the match result, not a scoreline.** The agent predicts *home win / draw / away win*. It maps cleanly onto a three-way enum the model rarely gets wrong, and it keeps the game inclusive and simple — a prediction, not a complicated form.
-- **`list_open_matches` only ever returns the upcoming, still-predictable schedule.** No finished matches, no scores. That's not a missing feature — it's a fairness boundary (more below), and it also keeps the tool's output small and fast.
+- **In the knockout rounds, a `draw` means penalties.** A tie after extra time is settled on a penalty shootout and scored as a `draw` — so predicting `draw` means you're backing the shootout; the shootout winner doesn't change the scored result. In the group stage, `draw` is just a normal level result.
+- **`list_open_matches` only ever returns the upcoming, still-predictable schedule.** No finished matches, no scores. That's not a missing feature — it's a fairness boundary (more below), and it also keeps the tool's output small and fast. World Cup matches open **36 hours before kickoff**, warm-up friendlies any time before kickoff, and every match locks at kickoff — so a pick can be made or changed right up until the window closes.
 
 Once connected, the natural-language surface feels like this:
 
@@ -131,7 +132,7 @@ Pick yours below — each entry uses the right method for that client. Where you
 ### Claude (Desktop / claude.ai) — OAuth
 
 Settings → **Connectors** → **Add custom connector** → paste `https://mcp.kickgeist.com/mcp` → **Add**. A one-tap consent page opens; approve it and you're signed in (no password, no client id/secret to fill). Works on Free (1 connector), Pro, Max, Team, and Enterprise.
-Docs: [getting started with custom connectors](https://support.claude.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp)
+Docs: [getting started with custom connectors](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp)
 
 ### Claude Code (CLI) — OAuth
 
@@ -143,11 +144,11 @@ Then `/mcp` to confirm and approve the one-tap consent. Docs: [code.claude.com/d
 
 ### ChatGPT (paid plans) — OAuth
 
-Plus / Pro / Business / Enterprise / Edu only (not Free). Settings → Apps & Connectors → Advanced settings → enable **Developer mode** → Create connector → paste `https://mcp.kickgeist.com/mcp` and approve the one-tap consent. Developer mode is labeled "powerful but dangerous," so review what you connect. Docs: [developers.openai.com/api/docs/guides/developer-mode](https://developers.openai.com/api/docs/guides/developer-mode)
+Plus / Pro / Business / Enterprise / Edu only (not Free). Settings → Apps & Connectors → Advanced settings → enable **Developer mode** → Create connector → paste `https://mcp.kickgeist.com/mcp` and approve the one-tap consent. Developer mode is labeled "powerful but dangerous," so review what you connect. Docs: [help.openai.com — developer mode & full MCP connectors](https://help.openai.com/en/articles/12584461-developer-mode-apps-and-full-mcp-connectors-in-chatgpt-beta)
 
 ### Perplexity (paid plans) — OAuth
 
-Pro / Max / Enterprise. Settings → Connectors → **+ Custom connector** → Remote → enter `https://mcp.kickgeist.com/mcp` and approve the one-tap consent. Docs: [perplexity.ai/help-center](https://www.perplexity.ai/help-center/en/articles/13915507-adding-custom-remote-connectors)
+Pro / Max / Enterprise. Settings → Connectors → **+ Custom connector** → Remote → enter `https://mcp.kickgeist.com/mcp` and approve the one-tap consent. Docs: [perplexity.ai/help-center — custom remote connectors](https://www.perplexity.ai/help-center/en/articles/13915507-adding-custom-remote-connectors)
 
 ### Goose — OAuth
 
@@ -155,7 +156,7 @@ Pro / Max / Enterprise. Settings → Connectors → **+ Custom connector** → R
 goose://extension?type=streamable_http&url=https%3A%2F%2Fmcp.kickgeist.com%2Fmcp&name=KICKGEIST&description=World%20Cup%20predictions
 ```
 
-Or Desktop → Add custom extension → Streamable HTTP → URL `https://mcp.kickgeist.com/mcp`, then approve the consent. Docs: [block.github.io/goose](https://block.github.io/goose/docs/getting-started/using-extensions/)
+Or Desktop → Add custom extension → Streamable HTTP → URL `https://mcp.kickgeist.com/mcp`, then approve the consent. Docs: [goose-docs.ai/docs/getting-started/using-extensions](https://goose-docs.ai/docs/getting-started/using-extensions/)
 
 ### LibreChat (self-host, admin) — OAuth
 
@@ -197,7 +198,7 @@ First create an account and copy your key at [`https://mcp.kickgeist.com/setup`]
 }
 ```
 
-Docs: [cursor.com/docs/context/mcp](https://cursor.com/docs/context/mcp)
+Docs: [cursor.com/docs/mcp](https://cursor.com/docs/mcp)
 
 ### VS Code (Copilot agent mode) — API key
 
@@ -240,7 +241,7 @@ Grab your key at [`https://mcp.kickgeist.com/setup`](https://mcp.kickgeist.com/s
 }
 ```
 
-Docs: [docs.windsurf.com/windsurf/cascade/mcp](https://docs.windsurf.com/windsurf/cascade/mcp)
+Docs: [docs.devin.ai/windsurf/plugins/cascade/mcp](https://docs.devin.ai/windsurf/plugins/cascade/mcp)
 
 ### Cline — API key
 
@@ -334,7 +335,7 @@ API key (header-only clients):          https://mcp.kickgeist.com/key/mcp
 
 Then ask it to start a group, join with the [KICKGEIST app](https://kickgeist.com), and find out: can you out-predict your own AI?
 
-- App: [kickgeist.com](https://kickgeist.com) · iOS + Android
+- App: [kickgeist.com](https://kickgeist.com) · [iOS](https://apps.apple.com/app/kickgeist/id6756968300) · [Android](https://play.google.com/store/apps/details?id=com.kickgeist.app)
 - Public repo (setup guides, per-client pages, tool reference): [github.com/kickgeist/agents](https://github.com/kickgeist/agents)
 - Protocol: [Model Context Protocol](https://modelcontextprotocol.io), revision `2025-11-25`, Streamable HTTP
 

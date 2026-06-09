@@ -48,7 +48,7 @@ https://mcp.kickgeist.com/mcp
 3. **Members:** open **Settings → Connectors**, find **KICKGEIST**, and click **Connect**, then approve the one-tap consent page.
 4. In a chat, enable it via the **+** button → **Connectors**.
 
-Official docs: <https://support.claude.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp>
+Official docs: <https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp>
 
 ---
 
@@ -99,13 +99,15 @@ Once connected (either path) and the one-tap consent is approved, your agent alr
 
    > "List the open World Cup matches."
 
-   Claude calls `list_open_matches` and shows upcoming fixtures you can still pick — match ID, home vs. away, kickoff time, and stage.
+   Claude calls `list_open_matches` and shows upcoming fixtures you can still pick — match ID, home vs. away, kickoff time, and stage. World Cup matches open ~36 hours before kickoff (warm-up friendlies any time before kickoff) and lock at kickoff — change your pick freely until then.
 
 2. **Make a prediction:**
 
    > "Predict the home team to win in [that match]."
 
    Claude calls `predict_match` with your chosen outcome (`home`, `draw`, or `away`).
+
+   > **Knockout matches (Round of 32 onward) can't end level.** If tied after extra time, the match goes to a penalty shootout, which KICKGEIST scores as a `draw` — so picking `draw` in a knockout means you're backing penalties (the shootout winner doesn't change the scored result). In the group stage, `draw` is a normal level result.
 
 3. **Bring the account onto your phone (optional):**
 
@@ -169,5 +171,5 @@ That's a feature, not a gap: it protects our licensed match data and keeps the s
 
 ## Official documentation
 
-- Claude custom connectors (web + Desktop): <https://support.claude.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp>
+- Claude custom connectors (web + Desktop): <https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp>
 - Claude Code MCP: <https://code.claude.com/docs/en/mcp>

@@ -2,7 +2,7 @@
 
 **Short version: your AI agent can play KICKGEIST without giving us your name, your email, or anything that identifies you. No password, no PII, no tracking-you-around-the-web. Just predictions and good fun with friends.**
 
-This page explains, in plain language, what the KICKGEIST MCP integration reads, writes, and stores. It is a friendly summary for the agent integration — not the full legal text. For the complete policy, see the [main KICKGEIST Privacy Policy](https://kickgeist.com/privacy).
+This page explains, in plain language, what the KICKGEIST MCP integration reads, writes, and stores. It is a friendly summary for the agent integration — not the full legal text. For the complete policy, see the [main KICKGEIST Privacy Policy](https://kickgeist.com/en/privacy/).
 
 ---
 
@@ -158,20 +158,21 @@ When you create a group, the server returns a shareable invite link (`https://ki
 
 ## Ads (AdMob)
 
-KICKGEIST is funded by ads served through Google AdMob **in the mobile app**. The MCP integration itself shows no ads and runs no ad code — it is just predictions, groups, and your stats. Ad personalization and the data AdMob processes are covered in the [main Privacy Policy](https://kickgeist.com/privacy) and apply to the app, not to your agent session.
+KICKGEIST is funded by ads served through Google AdMob **in the mobile app**. The MCP integration itself shows no ads and runs no ad code — it is just predictions, groups, and your stats. Ad personalization and the data AdMob processes are covered in the [main Privacy Policy](https://kickgeist.com/en/privacy/) and apply to the app, not to your agent session.
 
 ---
 
 ## Data you control
 
 - **Delete the account / data:** claim the agent's account onto a phone with its recovery code, then use the KICKGEIST mobile app, where account deletion lives. Deleting the account removes its predictions, group memberships, and stats.
-- **Disconnect the agent:** remove the connector from your AI client (OAuth path), or remove the API key from your config and rotate it at `/setup` (API-key path). That ends the session; it does not delete the account (use the app for deletion). Your recovery code still reaches the account later if you keep it.
+- **Disconnect the agent:** remove the connector from your AI client (OAuth path), or remove the API key from your config (API-key path). That ends the session; it does not delete the account (use the app for deletion). Your recovery code still reaches the account later if you keep it. Note there's no key-rotation flow — visiting `/setup` mints a brand-new account and key (a separate **"(AI)"** player); it does not re-key your existing account. To keep your current agent's history, first claim its account onto a phone with its recovery code.
+- **A leaked key stops working the moment the account is gone:** the `kg_live_…` key is checked on every request, so deleting the account in the app immediately invalidates the key. There's nothing to revoke separately.
 - **Claim onto a phone:** enter the recovery code in the KICKGEIST app to bring the agent's account onto a phone and keep playing there — a one-way handoff.
 
 ---
 
 ## Questions
 
-For anything not covered here, see the [full KICKGEIST Privacy Policy](https://kickgeist.com/privacy) or reach us through the in-app feedback option. We keep it simple on purpose: no password needed to play, your recovery code is the key, and the social fun stays in the app where your friends are.
+For anything not covered here, see the [full KICKGEIST Privacy Policy](https://kickgeist.com/en/privacy/) or reach us through the in-app feedback option. We keep it simple on purpose: no password needed to play, your recovery code is the key, and the social fun stays in the app where your friends are.
 
-*This document describes the MCP agent integration and is a plain-language summary. Where it and the main Privacy Policy differ in detail, the [main Privacy Policy](https://kickgeist.com/privacy) governs.*
+*This document describes the MCP agent integration and is a plain-language summary. Where it and the main Privacy Policy differ in detail, the [main Privacy Policy](https://kickgeist.com/en/privacy/) governs.*
